@@ -33,5 +33,5 @@ jobs:
             - name: Static analysis
               run: vendor/bin/phpstan analyse
 
-            - name: Unit tests
+            - name: Tests (unit + functional)
               run: vendor/bin/phpunit
