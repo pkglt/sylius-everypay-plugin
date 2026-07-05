@@ -47,6 +47,7 @@ final class EveryPayOneOffPayloadFactory
             'order_reference' => sprintf('%s-%d', (string) $order->getNumber(), (int) $payment->getId()),
             'customer_url' => $customerUrl,
             'locale' => $this->resolveLocale($order),
+            'payment_description' => $this->paymentDescription($order),
             'integration_details' => [
                 'integration' => 'custom',
                 'software' => 'Sylius',
@@ -77,6 +78,20 @@ final class EveryPayOneOffPayloadFactory
             $this->addressFields('billing', $billingAddress),
             $this->addressFields('shipping', $order->getShippingAddress()),
         );
+    }
+
+    /**
+     * Bank-statement text for Open Banking payments: "{channel} order {number}",
+     * reduced to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] — the
+     * SEPA set, so diacritics are stripped) and capped at 65 characters.
+     */
+    private function paymentDescription(OrderInterface $order): string
+    {
+        $text = sprintf('%s order %s', (string) $order->getChannel()?->getName(), (string) $order->getNumber());
+        $text = (string) preg_replace("#[^a-zA-Z0-9/?:().,'+ -]#", '', $text);
+        $text = trim((string) preg_replace('/\s+/', ' ', $text));
+
+        return substr($text, 0, 65);
     }
 
     private function resolveLocale(OrderInterface $order): string

@@ -48,6 +48,16 @@ final readonly class EveryPayCredentials
     }
 
     /**
+     * EveryPay processing accounts are conventionally named after their
+     * currency (EUR1, EUR3D1, ...) — a best-effort hint used only for a
+     * logged warning, never to block a payment.
+     */
+    public function currencyHint(): ?string
+    {
+        return 1 === preg_match('/^([A-Z]{3})\d/', $this->accountName, $matches) ? $matches[1] : null;
+    }
+
+    /**
      * @param array<array-key, mixed> $config
      */
     private static function stringValue(array $config, string $key): string

@@ -65,9 +65,24 @@ final readonly class CaptureEveryPayPaymentHandler
 
         $customerUrl = $this->afterPayUrlProvider->getUrl($paymentRequest);
 
+        $credentials = EveryPayCredentials::fromPaymentMethod($paymentRequest->getMethod());
+
+        // The processing account fixes the currency at EveryPay; a mismatch
+        // is admin-entered data we trust, but make the coming rejection
+        // diagnosable instead of a bare failed payment.
+        $currencyHint = $credentials->currencyHint();
+        if (null !== $currencyHint && $currencyHint !== $payment->getCurrencyCode()) {
+            $this->logger->warning('EveryPay processing account suggests a different currency than the payment — EveryPay will likely reject it.', [
+                'payment_id' => $payment->getId(),
+                'account_name' => $credentials->accountName,
+                'account_currency_hint' => $currencyHint,
+                'payment_currency' => $payment->getCurrencyCode(),
+            ]);
+        }
+
         try {
             $response = $this->apiClient->createOneOffPayment(
-                EveryPayCredentials::fromPaymentMethod($paymentRequest->getMethod()),
+                $credentials,
                 $this->payloadFactory->create($payment, $customerUrl),
             );
         } catch (EveryPayApiException $e) {

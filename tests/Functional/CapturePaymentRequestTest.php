@@ -54,6 +54,7 @@ final class CapturePaymentRequestTest extends FunctionalTestCase
         self::assertStringContainsString('/v4/payments/oneoff', $requests[0]['url']);
         $customerUrl = $this->customerUrlFrom((string) $requests[0]['body']);
         self::assertStringContainsString('/order/after-pay/', $customerUrl);
+        self::assertStringContainsString('"payment_description":"Web order 000000001"', (string) $requests[0]['body']);
     }
 
     public function testAnExplicitPayloadUrlIsSentAsTheCustomerUrl(): void

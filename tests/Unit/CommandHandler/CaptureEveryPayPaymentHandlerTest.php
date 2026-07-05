@@ -12,6 +12,8 @@ use Pkg\SyliusEveryPayPlugin\CommandHandler\CaptureEveryPayPaymentHandler;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;
 use Pkg\SyliusEveryPayPlugin\Provider\AfterPayUrlProviderInterface;
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
@@ -93,7 +95,59 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         self::assertSame([], $paymentRequest->getResponseData());
     }
 
-    private function paymentRequest(): PaymentRequest
+    /** @var list<array{string, string}> */
+    private array $loggedRecords = [];
+
+    public function testWarnsWhenTheProcessingAccountSuggestsAnotherCurrency(): void
+    {
+        $paymentRequest = $this->paymentRequest(paymentCurrency: 'USD');
+        $handler = $this->handler($paymentRequest, new MockResponse(json_encode([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]), $this->recordingLogger());
+
+        $handler(new CaptureEveryPayPayment('hash'));
+
+        // EUR3D1 hints EUR, the payment is USD — warn, but never block.
+        $warnings = array_filter($this->loggedRecords, static fn (array $r): bool => 'warning' === $r[0]);
+        self::assertCount(1, $warnings);
+        self::assertStringContainsString('different currency', (string) array_values($warnings)[0][1]);
+        self::assertSame(self::PAYMENT_LINK, $paymentRequest->getResponseData()['payment_link']);
+    }
+
+    public function testDoesNotWarnWhenTheCurrenciesMatch(): void
+    {
+        $paymentRequest = $this->paymentRequest(paymentCurrency: 'EUR');
+        $handler = $this->handler($paymentRequest, new MockResponse(json_encode([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]), $this->recordingLogger());
+
+        $handler(new CaptureEveryPayPayment('hash'));
+
+        self::assertSame([], array_filter($this->loggedRecords, static fn (array $r): bool => 'warning' === $r[0]));
+    }
+
+    private function recordingLogger(): LoggerInterface
+    {
+        $this->loggedRecords = [];
+        $sink = function (string $level, string $message): void {
+            $this->loggedRecords[] = [$level, $message];
+        };
+
+        return new class($sink) extends AbstractLogger {
+            public function __construct(private readonly \Closure $sink)
+            {
+            }
+
+            public function log($level, \Stringable|string $message, array $context = []): void
+            {
+                ($this->sink)(is_string($level) ? $level : 'other', (string) $message);
+            }
+        };
+    }
+
+    private function paymentRequest(?string $paymentCurrency = null): PaymentRequest
     {
         $order = $this->createStub(OrderInterface::class);
         $order->method('getNumber')->willReturn('000123');
@@ -106,6 +160,9 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         $payment = new Payment();
         $payment->setAmount(2599);
         $payment->setOrder($order);
+        if (null !== $paymentCurrency) {
+            $payment->setCurrencyCode($paymentCurrency);
+        }
 
         $gatewayConfig = $this->createStub(GatewayConfigInterface::class);
         $gatewayConfig->method('getConfig')->willReturn([
@@ -120,7 +177,7 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         return new PaymentRequest($payment, $method);
     }
 
-    private function handler(PaymentRequest $paymentRequest, MockResponse $apiResponse): CaptureEveryPayPaymentHandler
+    private function handler(PaymentRequest $paymentRequest, MockResponse $apiResponse, ?LoggerInterface $logger = null): CaptureEveryPayPaymentHandler
     {
         $paymentRequestProvider = $this->createStub(PaymentRequestProviderInterface::class);
         $paymentRequestProvider->method('provide')->willReturn($paymentRequest);
@@ -144,7 +201,7 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
             $afterPayUrlProvider,
             $stateMachine,
             $this->createStub(EntityManagerInterface::class),
-            new NullLogger(),
+            $logger ?? new NullLogger(),
         );
     }
 }
