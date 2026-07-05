@@ -1,0 +1,76 @@
+{
+    "name": "pkglt/sylius-everypay-plugin",
+    "type": "sylius-plugin",
+    "description": "EveryPay (LHV Paytech — SEB, LHV, Swedbank in the Baltics) payment gateway for Sylius 2, built on the PaymentRequest abstraction — no Payum.",
+    "keywords": [
+        "sylius",
+        "sylius-plugin",
+        "everypay",
+        "every-pay",
+        "payment",
+        "gateway",
+        "seb",
+        "lhv",
+        "swedbank",
+        "banklink",
+        "baltic"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alfonsas Cirtautas",
+            "email": "alfonsas.cirtautas@gmail.com"
+        },
+        {
+            "name": "Psichologinio konsultavimo grupė (PKG)",
+            "homepage": "https://pkg.lt"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "sylius/core-bundle": "^2.2",
+        "symfony/http-client-contracts": "^3.0"
+    },
+    "require-dev": {
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpunit/phpunit": "^10.5",
+        "sylius-labs/coding-standard": "^4.4",
+        "sylius/sylius": "^2.2",
+        "symfony/http-client": "^6.4 || ^7.1"
+    },
+    "suggest": {
+        "sylius/shop-bundle": "The hosted-payment-page flow builds its return URL from the Sylius shop order-pay routes"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pkg\\SyliusEveryPayPlugin\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Pkg\\SyliusEveryPayPlugin\\": "tests/"
+        }
+    },
+    "scripts": {
+        "analyse": "phpstan analyse",
+        "check": "ecs check",
+        "fix": "ecs check --fix",
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": false,
+            "phpstan/extension-installer": true,
+            "symfony/flex": false,
+            "symfony/runtime": false
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        }
+    }
+}
