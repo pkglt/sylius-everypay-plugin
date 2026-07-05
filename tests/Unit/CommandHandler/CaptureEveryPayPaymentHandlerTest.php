@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Pkg\SyliusEveryPayPlugin\CommandHandler;
+namespace Tests\Pkg\SyliusEveryPayPlugin\Unit\CommandHandler;
 
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;

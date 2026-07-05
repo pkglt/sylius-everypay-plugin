@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Pkg\SyliusEveryPayPlugin\CommandProvider;
+namespace Tests\Pkg\SyliusEveryPayPlugin\Unit\CommandProvider;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;

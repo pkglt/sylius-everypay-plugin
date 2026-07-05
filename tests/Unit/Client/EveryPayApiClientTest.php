@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Pkg\SyliusEveryPayPlugin\Client;
+namespace Tests\Pkg\SyliusEveryPayPlugin\Unit\Client;
 
 use PHPUnit\Framework\TestCase;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiClient;

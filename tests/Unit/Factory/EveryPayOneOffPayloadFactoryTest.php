@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Pkg\SyliusEveryPayPlugin\Factory;
+namespace Tests\Pkg\SyliusEveryPayPlugin\Unit\Factory;
 
 use PHPUnit\Framework\TestCase;
 use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;

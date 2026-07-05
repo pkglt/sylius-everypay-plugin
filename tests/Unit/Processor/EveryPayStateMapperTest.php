@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Pkg\SyliusEveryPayPlugin\Processor;
+namespace Tests\Pkg\SyliusEveryPayPlugin\Unit\Processor;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
