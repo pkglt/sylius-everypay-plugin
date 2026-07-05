@@ -51,6 +51,29 @@ final class CapturePaymentRequestTest extends FunctionalTestCase
         self::assertCount(1, $requests);
         self::assertSame('POST', $requests[0]['method']);
         self::assertStringContainsString('/v4/payments/oneoff', $requests[0]['url']);
+        $customerUrl = $this->customerUrlFrom((string) $requests[0]['body']);
+        self::assertStringContainsString('/order/after-pay/', $customerUrl);
+    }
+
+    public function testAnExplicitPayloadUrlIsSentAsTheCustomerUrl(): void
+    {
+        static::bootKernel();
+        $this->prepareDatabase();
+        $paymentRequest = $this->createCapturePaymentRequest();
+        $paymentRequest->setPayload(['after_pay_url' => 'https://spa.example/checkout/thank-you']);
+        $this->entityManager()->flush();
+
+        $this->everyPayHttpMock()->queueJson([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+            'payment_state' => 'initial',
+        ], 201);
+
+        $this->commandBus()->dispatch(new CaptureEveryPayPayment($paymentRequest->getId()));
+
+        $requests = $this->everyPayHttpMock()->recordedRequests();
+        self::assertCount(1, $requests);
+        self::assertSame('https://spa.example/checkout/thank-you', $this->customerUrlFrom((string) $requests[0]['body']));
     }
 
     public function testApiFailureFailsPaymentRequestAndPaymentWithoutThrowing(): void
@@ -89,6 +112,18 @@ final class CapturePaymentRequestTest extends FunctionalTestCase
         self::assertNotNull($paymentRequest->getId(), 'The payment request has no hash after persisting.');
 
         return $paymentRequest;
+    }
+
+    private function customerUrlFrom(string $requestBody): string
+    {
+        /** @var array<string, mixed> $body */
+        $body = json_decode($requestBody, true, 512, \JSON_THROW_ON_ERROR);
+        $customerUrl = $body['customer_url'] ?? null;
+        if (!is_string($customerUrl)) {
+            self::fail('The oneoff request body carries no customer_url.');
+        }
+
+        return $customerUrl;
     }
 
     private function commandBus(): MessageBusInterface

@@ -50,6 +50,9 @@ All gates must pass before a change is done.
   gateway-config encryption key before delegating to the test app bootstrap.
 - Gotcha: `doctrine_lazy_objects.php` enables ORM native lazy objects only on
   PHP >= 8.4 (var-exporter 8 removed LazyGhost); do not fold it into YAML.
+- Gotcha: the functional kernel runs with `APP_DEBUG=0` (faster, less memory),
+  so the compiled container does NOT track config changes — after touching
+  DI/config files, `rm -rf var/cache` before trusting a test run.
 - Behat is still on the roadmap; the functional suite is the current
   in-a-real-app verification layer.
 
@@ -114,6 +117,14 @@ source of truth.
   listed alongside `everypay` in `config/app/sylius_payment.yaml`.
 - `EveryPayGateway` holds all shared constants (factory name, config keys,
   base URLs, payment-details helpers). Don't scatter string literals.
+- **The after-pay URL is a seam** (`Provider/AfterPayUrlProviderInterface`):
+  the default alias points at `PayloadAfterPayUrlProvider` (headless — reads
+  `after_pay_url` from the payment request payload); when SyliusShopBundle is
+  registered the extension loads `config/services/integrations/sylius_shop.php`,
+  which re-aliases it to `SyliusShopAfterPayUrlProvider` (payload first, shop
+  after-pay route as fallback). That class is excluded from the service
+  prototype on purpose — it must not exist in shopless containers. Never
+  autowire `sylius_shop.*` services directly into plugin classes.
 
 ## Conventions
 

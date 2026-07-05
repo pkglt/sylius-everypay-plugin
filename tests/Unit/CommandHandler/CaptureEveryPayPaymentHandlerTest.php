@@ -11,9 +11,9 @@ use Pkg\SyliusEveryPayPlugin\Command\CaptureEveryPayPayment;
 use Pkg\SyliusEveryPayPlugin\CommandHandler\CaptureEveryPayPaymentHandler;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;
+use Pkg\SyliusEveryPayPlugin\Provider\AfterPayUrlProviderInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
-use Sylius\Bundle\CoreBundle\OrderPay\Provider\UrlProviderInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
@@ -125,7 +125,7 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         $paymentRequestProvider = $this->createStub(PaymentRequestProviderInterface::class);
         $paymentRequestProvider->method('provide')->willReturn($paymentRequest);
 
-        $afterPayUrlProvider = $this->createStub(UrlProviderInterface::class);
+        $afterPayUrlProvider = $this->createStub(AfterPayUrlProviderInterface::class);
         $afterPayUrlProvider->method('getUrl')->willReturn('https://shop.example/after-pay/hash');
 
         $this->appliedTransitions = [];

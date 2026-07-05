@@ -44,7 +44,7 @@
         "symfony/http-client": "^6.4 || ^7.1"
     },
     "suggest": {
-        "sylius/shop-bundle": "The hosted-payment-page flow builds its return URL from the Sylius shop order-pay routes"
+        "sylius/shop-bundle": "Provides the default after-pay return URL (shop order-pay flow); headless stores pass after_pay_url in the payment request payload instead"
     },
     "autoload": {
         "psr-4": {

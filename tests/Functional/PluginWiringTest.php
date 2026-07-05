@@ -15,8 +15,10 @@ use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;
 use Pkg\SyliusEveryPayPlugin\Form\EveryPayGatewayConfigurationType;
 use Pkg\SyliusEveryPayPlugin\Processor\EveryPayPaymentSynchronizer;
 use Pkg\SyliusEveryPayPlugin\Processor\EveryPayStateMapper;
+use Pkg\SyliusEveryPayPlugin\Provider\AfterPayUrlProviderInterface;
 use Pkg\SyliusEveryPayPlugin\Provider\EveryPayHttpResponseProvider;
 use Pkg\SyliusEveryPayPlugin\Provider\EveryPayNotifyPaymentProvider;
+use Pkg\SyliusEveryPayPlugin\Provider\SyliusShopAfterPayUrlProvider;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock;
 
@@ -48,6 +50,16 @@ final class PluginWiringTest extends FunctionalTestCase
         ] as $serviceClass) {
             self::assertInstanceOf($serviceClass, static::getContainer()->get($serviceClass));
         }
+    }
+
+    public function testShopBundlePresenceSwitchesTheAfterPayUrlProviderToTheShopAwareOne(): void
+    {
+        static::bootKernel();
+
+        self::assertInstanceOf(
+            SyliusShopAfterPayUrlProvider::class,
+            static::getContainer()->get(AfterPayUrlProviderInterface::class),
+        );
     }
 
     public function testTheApiClientIsBackedByTheScriptedMockInTestEnvironment(): void

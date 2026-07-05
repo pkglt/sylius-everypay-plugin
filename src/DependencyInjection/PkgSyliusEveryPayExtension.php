@@ -17,5 +17,11 @@ final class PkgSyliusEveryPayExtension extends Extension
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
 
         $loader->load('services.php');
+
+        /** @var array<string, class-string> $bundles */
+        $bundles = $container->getParameter('kernel.bundles');
+        if (isset($bundles['SyliusShopBundle'])) {
+            $loader->load('services/integrations/sylius_shop.php');
+        }
     }
 }

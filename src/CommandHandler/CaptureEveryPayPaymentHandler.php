@@ -12,17 +12,15 @@ use Pkg\SyliusEveryPayPlugin\Client\EveryPayCredentials;
 use Pkg\SyliusEveryPayPlugin\Command\CaptureEveryPayPayment;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;
+use Pkg\SyliusEveryPayPlugin\Provider\AfterPayUrlProviderInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
-use Sylius\Bundle\CoreBundle\OrderPay\Provider\UrlProviderInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Sylius\Component\Payment\PaymentRequestTransitions;
 use Sylius\Component\Payment\PaymentTransitions;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Creates the EveryPay one-off payment and stores the hosted payment page
@@ -37,8 +35,7 @@ final readonly class CaptureEveryPayPaymentHandler
         private PaymentRequestProviderInterface $paymentRequestProvider,
         private EveryPayApiClient $apiClient,
         private EveryPayOneOffPayloadFactory $payloadFactory,
-        #[Autowire(service: 'sylius_shop.provider.order_pay.after_pay_url')]
-        private UrlProviderInterface $afterPayUrlProvider,
+        private AfterPayUrlProviderInterface $afterPayUrlProvider,
         private StateMachineInterface $stateMachine,
         private EntityManagerInterface $entityManager,
         private LoggerInterface $logger,
@@ -66,7 +63,7 @@ final readonly class CaptureEveryPayPaymentHandler
 
         $payment = EveryPayGateway::corePaymentFrom($paymentRequest);
 
-        $customerUrl = $this->afterPayUrlProvider->getUrl($paymentRequest, UrlGeneratorInterface::ABSOLUTE_URL);
+        $customerUrl = $this->afterPayUrlProvider->getUrl($paymentRequest);
 
         try {
             $response = $this->apiClient->createOneOffPayment(

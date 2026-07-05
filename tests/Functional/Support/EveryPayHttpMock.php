@@ -17,13 +17,14 @@ final class EveryPayHttpMock extends MockHttpClient
     /** @var list<MockResponse> */
     private array $queue = [];
 
-    /** @var list<array{method: string, url: string}> */
+    /** @var list<array{method: string, url: string, body: ?string}> */
     private array $recordedRequests = [];
 
     public function __construct()
     {
-        parent::__construct(function (string $method, string $url): MockResponse {
-            $this->recordedRequests[] = ['method' => $method, 'url' => $url];
+        parent::__construct(function (string $method, string $url, array $options): MockResponse {
+            $body = $options['body'] ?? null;
+            $this->recordedRequests[] = ['method' => $method, 'url' => $url, 'body' => is_string($body) ? $body : null];
 
             if ([] === $this->queue) {
                 throw new \LogicException(sprintf('Unexpected EveryPay API request "%s %s" — no response queued.', $method, $url));
@@ -50,7 +51,7 @@ final class EveryPayHttpMock extends MockHttpClient
     }
 
     /**
-     * @return list<array{method: string, url: string}>
+     * @return list<array{method: string, url: string, body: ?string}>
      */
     public function recordedRequests(): array
     {

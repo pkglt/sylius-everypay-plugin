@@ -37,8 +37,8 @@ the same architecture as the official Stripe plugin). **No Payum anywhere.**
 | PHP | ^8.2 |
 | Sylius | ^2.2 |
 
-The standard Sylius shop frontend (`sylius/shop-bundle`) is expected — the plugin
-builds the customer return URL from the shop's order-pay flow.
+Works with the standard Sylius shop frontend out of the box, and with
+headless/API-only stores (see [Headless checkouts](#headless--api-checkouts)).
 
 ## Installation
 
@@ -101,6 +101,23 @@ on (the plugin generates unique references per payment attempt).
 If your shop sits behind a CDN/WAF (e.g. Cloudflare), make sure
 `/payment-methods/*` is neither cached nor bot-challenged — a challenge page
 would silently eat the server-to-server callback.
+
+## Headless / API checkouts
+
+With `sylius/shop-bundle` installed, the customer return URL (`customer_url`)
+defaults to the shop's `/order/after-pay/{hash}` route — nothing to configure.
+
+In headless stores (or for API-created payment requests in hybrid apps), pass
+the return URL of your frontend in the payment request payload instead:
+
+```json
+{ "after_pay_url": "https://spa.example/checkout/thank-you" }
+```
+
+An explicit `after_pay_url` always wins over the shop route. Remember that
+EveryPay rejects URLs with a dotless host (plain `localhost` fails; `*.localhost`
+subdomains work). After the customer returns to your frontend, drive the usual
+Sylius payment-request status flow to settle the payment.
 
 ## How it works
 
