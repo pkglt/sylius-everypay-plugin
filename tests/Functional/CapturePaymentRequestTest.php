@@ -10,6 +10,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Payment\Factory\PaymentRequestFactoryInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Routing\RouterInterface;
 
 /**
  * Dispatches the capture command on the real sylius.payment_request.command_bus
@@ -110,6 +111,11 @@ final class CapturePaymentRequestTest extends FunctionalTestCase
         $entityManager->flush();
 
         self::assertNotNull($paymentRequest->getId(), 'The payment request has no hash after persisting.');
+
+        // In the shop the after-pay URL is generated during an HTTP request;
+        // a bus dispatch from the CLI context has no _locale router parameter
+        // (older Sylius versions do not derive it from the order).
+        $this->service(RouterInterface::class, 'router')->getContext()->setParameter('_locale', 'en_US');
 
         return $paymentRequest;
     }

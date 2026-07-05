@@ -8,12 +8,15 @@ on:
 jobs:
     tests:
         runs-on: ubuntu-latest
-        name: "PHP ${{ matrix.php }}"
+        name: "PHP ${{ matrix.php }}, ${{ matrix.dependencies }} deps"
 
         strategy:
             fail-fast: false
             matrix:
                 php: ["8.2", "8.3", "8.4"]
+                # lowest resolves the Symfony 6.4 line, highest the current
+                # Symfony/Sylius releases — both lines stay covered.
+                dependencies: [highest, lowest]
 
         steps:
             - uses: actions/checkout@v4
@@ -24,13 +27,20 @@ jobs:
                   php-version: "${{ matrix.php }}"
                   coverage: none
 
+            - name: Validate composer.json
+              run: composer validate --ansi --strict
+
             - name: Install dependencies
               uses: ramsey/composer-install@v3
+              with:
+                  dependency-versions: "${{ matrix.dependencies }}"
 
             - name: Coding standard
+              if: matrix.dependencies == 'highest'
               run: vendor/bin/ecs check
 
             - name: Static analysis
+              if: matrix.dependencies == 'highest'
               run: vendor/bin/phpstan analyse
 
             - name: Tests (unit + functional)

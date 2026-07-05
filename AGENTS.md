@@ -28,11 +28,20 @@ composer install
 vendor/bin/phpunit --testsuite unit         # pure unit tests (MockHttpClient — no DB, no kernel)
 vendor/bin/phpunit --testsuite functional   # real Sylius kernel via sylius/test-application
 vendor/bin/phpunit                          # both suites — this is what CI runs
-vendor/bin/phpstan analyse                  # level 9, src/ + tests/
+vendor/bin/phpstan analyse                  # level 9, src/ + tests/ (TestApplication config excluded)
 vendor/bin/ecs check                        # Sylius Labs coding standard (--fix to autofix)
 ```
 
-All gates must pass before a change is done.
+All gates must pass before a change is done. CI runs a PHP 8.2/8.3/8.4 ×
+highest/lowest dependency matrix (`ramsey/composer-install`
+dependency-versions) — lowest resolves the Symfony 6.4 line. When a lowest
+build breaks on a transitive package's own bad constraints, prefer a
+require-dev floor (invisible to consumers, e.g. api-platform/json-schema,
+knplabs/knp-menu-bundle) over a `conflict` entry; reserve `conflict` for
+combinations real consumer apps could hit (e.g. payum/core <1.7.3 with
+psr/log 3). Reproduce locally with
+`composer update --prefer-lowest --prefer-stable` and remember `rm -rf
+var/cache` before the functional suite.
 
 ### Test layout
 

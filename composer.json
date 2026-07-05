@@ -32,6 +32,8 @@
         "symfony/http-client-contracts": "^3.0"
     },
     "require-dev": {
+        "api-platform/json-schema": "^4.2",
+        "knplabs/knp-menu-bundle": "^3.5",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.0",
         "phpstan/phpstan-doctrine": "^2.0",
@@ -75,5 +77,8 @@
         "branch-alias": {
             "dev-main": "1.0-dev"
         }
+    },
+    "conflict": {
+        "payum/core": "<1.7.3"
     }
 }

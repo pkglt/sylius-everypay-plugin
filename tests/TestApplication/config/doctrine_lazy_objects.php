@@ -3,15 +3,17 @@
 declare(strict_types=1);
 
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\VarExporter\ProxyHelper;
 
 /*
- * On PHP >= 8.4 with symfony/var-exporter 8 the LazyGhost proxy path is gone,
- * so Doctrine ORM 3.x must use native lazy objects. On PHP 8.2/8.3 (where
- * var-exporter 7 still provides LazyGhost) the option itself is unavailable —
- * hence the runtime switch instead of plain YAML.
+ * With symfony/var-exporter 8 the LazyGhost proxy generator is gone, so
+ * Doctrine ORM refuses to build proxies unless native lazy objects (PHP >= 8.4)
+ * are enabled. Mirror ORM's own detection instead of a plain YAML flag: on
+ * older stacks (var-exporter 6/7 — e.g. a --prefer-lowest build) the option may
+ * not even exist in the doctrine-bundle configuration, and LazyGhost works.
  */
 return static function (ContainerConfigurator $configurator): void {
-    if (\PHP_VERSION_ID >= 80400) {
+    if (\PHP_VERSION_ID >= 80400 && !method_exists(ProxyHelper::class, 'generateLazyGhost')) {
         $configurator->extension('doctrine', [
             'orm' => [
                 'enable_native_lazy_objects' => true,
