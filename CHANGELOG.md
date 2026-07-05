@@ -5,9 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.2] - 2026-07-06
+
+Supersedes the retracted v0.1.1: its git history and test fixtures carried
+leftover data from the source project.
 
 ### Added
+
+- Project hygiene: SECURITY.md, CONTRIBUTING.md, this changelog, GitHub
+  issue templates and an EveryPay trademark note.
 
 - Functional test suite running the plugin inside the official
   `sylius/test-application` (SQLite, scripted EveryPay API mock): container
@@ -30,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Conflict with `payum/core` < 1.7.3, which declares psr/log 3 support but
   fatals on autoload.
 
-## [0.1.1] - 2026-07-05
+## [0.1.1] - 2026-07-05 [RETRACTED]
 
 First public release, extracted from a production Sylius 2 shop and verified
 end-to-end against the EveryPay/SEB demo environment.
@@ -52,5 +58,5 @@ end-to-end against the EveryPay/SEB demo environment.
 
 > v0.1.0 was retracted minutes after publishing (identical functionality).
 
-[Unreleased]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/pkglt/sylius-everypay-plugin/releases/tag/v0.1.1
+[0.1.2]: https://github.com/pkglt/sylius-everypay-plugin/releases/tag/v0.1.2
+[0.1.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.1.2...v0.1.1
