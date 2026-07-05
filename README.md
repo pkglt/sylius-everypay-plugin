@@ -1,0 +1,156 @@
+# Sylius EveryPay Plugin
+
+[![Build](https://github.com/pkglt/sylius-everypay-plugin/actions/workflows/build.yaml/badge.svg)](https://github.com/pkglt/sylius-everypay-plugin/actions/workflows/build.yaml)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+[EveryPay](https://every-pay.com) payment gateway for **Sylius 2.x**. EveryPay is the
+LHV Paytech e-commerce platform used by the Baltic partner banks **SEB, LHV and
+Swedbank** — one integration gives you card payments, Open Banking bank links
+(all major Baltic banks), Apple Pay and Google Pay through EveryPay's hosted
+payment page.
+
+Built on the modern Sylius **PaymentRequest** abstraction (`sylius/payment-bundle`,
+the same architecture as the official Stripe plugin). **No Payum anywhere.**
+
+> Not to be confused with everypay.gr (a Greek PSP with the same name).
+
+## Features
+
+- **One-off payments** via the EveryPay hosted payment page (cards, bank links, wallets)
+- **Server-to-server callbacks** — unauthenticated callbacks are never trusted;
+  the payment state is always re-read from the EveryPay API (the single source of truth)
+- **Idempotent state synchronization** — customer return and callbacks may arrive
+  in any order, any number of times
+- **Full refunds** from the standard Sylius admin Refund button, executed
+  transactionally (a failed EveryPay refund never leaves a payment marked refunded)
+- **Portal-initiated refund detection** — a refund made in the EveryPay merchant
+  portal syncs back without triggering a second refund API call
+- **Retry-friendly checkout** — a customer who bounces off the hosted page can
+  pay again; failed attempts get a fresh Sylius payment automatically
+- **Encrypted credentials** — gateway config is encrypted at rest by Sylius
+- Admin form in **English, Lithuanian, Estonian, Latvian**
+
+## Requirements
+
+| | Version |
+|---|---|
+| PHP | ^8.2 |
+| Sylius | ^2.2 |
+
+The standard Sylius shop frontend (`sylius/shop-bundle`) is expected — the plugin
+builds the customer return URL from the shop's order-pay flow.
+
+## Installation
+
+### 1. Require the package
+
+```bash
+composer require pkglt/sylius-everypay-plugin
+```
+
+### 2. Register the bundle
+
+```php
+// config/bundles.php
+return [
+    // ...
+    Pkg\SyliusEveryPayPlugin\PkgSyliusEveryPayPlugin::class => ['all' => true],
+];
+```
+
+### 3. Import the plugin configuration
+
+```yaml
+# config/packages/pkg_sylius_everypay.yaml
+imports:
+    - { resource: '@PkgSyliusEveryPayPlugin/config/config.yaml' }
+```
+
+This registers the gateway validation groups and the admin form Twig hooks.
+No database migrations are needed — the plugin only uses core Sylius entities
+(`sylius_payment`, `sylius_payment_request`, `sylius_gateway_config`).
+
+### 4. Create the payment method
+
+In the Sylius admin: *Payment methods → Create*, choose the **EveryPay
+(cards & bank payments)** gateway, and fill in:
+
+| Field | Where to find it |
+|---|---|
+| API username / API secret | EveryPay merchant portal → *Merchant settings → General* |
+| Processing account | e.g. `EUR3D1` — shown in the portal; fixes the currency and available methods |
+| Environment | Demo (`igw-demo.every-pay.com`) or Live (`pay.every-pay.eu`) |
+
+Because no Payum factory named `everypay` exists, Sylius automatically stores
+`use_payum = 0` on the gateway config and routes checkout through the
+PaymentRequest pipeline — no extra configuration needed.
+
+### 5. Set the callback URL in the EveryPay portal
+
+In the merchant portal under *E-shop settings → Payments*, set the callback
+(notification) URL to the Sylius payment method notify endpoint:
+
+```
+https://<your-shop-host>/payment-methods/<PAYMENT_METHOD_CODE>
+```
+
+Keep **"Additional notifications via callback"** enabled so refund/void/chargeback
+events are delivered too, and leave the `order_reference` uniqueness validation
+on (the plugin generates unique references per payment attempt).
+
+If your shop sits behind a CDN/WAF (e.g. Cloudflare), make sure
+`/payment-methods/*` is neither cached nor bot-challenged — a challenge page
+would silently eat the server-to-server callback.
+
+## How it works
+
+| Flow | Trigger | What happens |
+|---|---|---|
+| Capture | customer finishes checkout | `POST /v4/payments/oneoff` → customer is redirected (303) to the hosted payment page |
+| Status | customer returns to the shop | payment state re-read from the API, Sylius payment transitioned accordingly |
+| Notify | EveryPay server callback | payment resolved by `payment_reference`, state re-read from the API; non-2xx responses make EveryPay redeliver (6 retries / 72 h) |
+| Refund | admin presses Refund | refund payment request + `POST /v4/payments/refund` inside one transaction; on API failure everything rolls back and the admin sees an error flash |
+
+See [docs/architecture.md](docs/architecture.md) for the full design
+(state mapping table, idempotency and concurrency notes) and
+[docs/everypay-api.md](docs/everypay-api.md) for the distilled EveryPay API v4
+reference.
+
+## Local development & testing gotchas
+
+- EveryPay rejects `customer_url` with a dotless host — `http://localhost/...`
+  fails one-off validation, while `.localhost` subdomains (e.g. `http://myshop.localhost`)
+  pass. Point your dev channel hostname at a `.localhost` subdomain.
+- Callbacks need a public URL — an `ngrok http 80 --host-header=<your-host>`
+  tunnel works fine against the demo environment.
+- SEB demo test cards are documented publicly at
+  [support.ecommerce.sebgroup.com](https://support.ecommerce.sebgroup.com/en/articles/13459276-test-cards).
+
+## Development
+
+```bash
+composer install
+vendor/bin/phpunit           # unit tests
+vendor/bin/phpstan analyse   # static analysis, level 9
+vendor/bin/ecs check         # coding standard (Sylius Labs)
+```
+
+This repository is set up for AI-agent-assisted development — see
+[AGENTS.md](AGENTS.md) for the project map, invariants and conventions.
+
+## Roadmap
+
+- Partial refunds via `sylius/refund-plugin` integration
+  (the API client already accepts arbitrary amounts)
+- Tokenized/CIT payments (`request_token`)
+- Per-method direct links (skip the hosted method selector via
+  `payment_methods[].payment_link`)
+- Behat/functional coverage against a mocked EveryPay API
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+Extracted from the production integration of a Lithuanian Sylius 2 shop, where
+it has been verified end-to-end against the EveryPay/SEB demo environment
+(full pay, refund, callback and failure paths).
