@@ -1,0 +1,3 @@
+sylius:
+    payment:
+        everypay_refund_failed: 'The EveryPay refund failed — the payment state was left unchanged. Try again or refund from the EveryPay merchant portal.'

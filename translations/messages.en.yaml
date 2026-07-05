@@ -1,0 +1,11 @@
+pkg_everypay:
+    ui:
+        gateway_label: 'EveryPay (cards & bank payments)'
+        api_username: 'API username'
+        api_secret: 'API secret'
+        api_secret_help: 'When editing, leave empty to keep the currently stored secret.'
+        account_name: 'Processing account'
+        account_name_help: 'E.g. EUR3D1 — found in the EveryPay merchant portal; determines the currency and available payment methods.'
+        environment: 'Environment'
+        environment_demo: 'Demo (test)'
+        environment_live: 'Live (production)'

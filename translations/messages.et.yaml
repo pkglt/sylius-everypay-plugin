@@ -1,0 +1,12 @@
+# Estonian — machine-assisted translation, native review welcome.
+pkg_everypay:
+    ui:
+        gateway_label: 'EveryPay (kaardimaksed ja pangalingid)'
+        api_username: 'API kasutajanimi'
+        api_secret: 'API salasõna (secret)'
+        api_secret_help: 'Muutmisel jätke tühjaks, et salvestatud salasõna säiliks.'
+        account_name: 'Töötlemiskonto (processing account)'
+        account_name_help: 'Nt EUR3D1 — leitav EveryPay kaupmehe portaalist; määrab valuuta ja saadaolevad makseviisid.'
+        environment: 'Keskkond'
+        environment_demo: 'Demo (test)'
+        environment_live: 'Live (toodang)'

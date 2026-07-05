@@ -1,0 +1,3 @@
+sylius:
+    payment:
+        everypay_refund_failed: 'Grąžinimas per EveryPay nepavyko — mokėjimo būsena nepakeista. Bandykite dar kartą arba grąžinkite per EveryPay pardavėjo portalą.'
