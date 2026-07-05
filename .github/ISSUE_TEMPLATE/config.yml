@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+    - name: Security vulnerability
+      url: https://github.com/pkglt/sylius-everypay-plugin/security/advisories/new
+      about: Report security issues privately — never as a public issue.
+    - name: EveryPay platform support
+      url: https://support.every-pay.com/
+      about: Issues with the EveryPay service itself (merchant portal, onboarding, API availability).

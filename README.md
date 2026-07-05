@@ -173,6 +173,13 @@ This repository is set up for AI-agent-assisted development — see
   `payment_methods[].payment_link`)
 - Behat scenarios on top of the existing functional suite
 
+## Contributing & security
+
+Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and the
+agent/architecture guide in [AGENTS.md](AGENTS.md). Please report security
+issues privately per [SECURITY.md](SECURITY.md). Changes are tracked in the
+[CHANGELOG](CHANGELOG.md).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
@@ -180,3 +187,7 @@ MIT — see [LICENSE](LICENSE).
 Extracted from the production integration of a Lithuanian Sylius 2 shop, where
 it has been verified end-to-end against the EveryPay/SEB demo environment
 (full pay, refund, callback and failure paths).
+
+*EveryPay is a trademark of its respective owner (EveryPay AS / LHV Paytech).
+This is an independent community integration, not affiliated with or endorsed
+by EveryPay, LHV, SEB or Swedbank.*

@@ -1,0 +1,32 @@
+name: Bug report
+description: Something in the plugin does not behave as documented
+labels: [bug]
+body:
+    - type: markdown
+      attributes:
+          value: |
+              **Security issue?** Please do NOT report it here — see [SECURITY.md](../blob/main/SECURITY.md).
+    - type: textarea
+      id: what-happened
+      attributes:
+          label: What happened?
+          description: What did you do, what did you expect, what happened instead? Include the payment flow (capture / return / callback / refund) if relevant.
+      validations:
+          required: true
+    - type: textarea
+      id: versions
+      attributes:
+          label: Versions
+          placeholder: |
+              pkglt/sylius-everypay-plugin:
+              sylius/sylius:
+              PHP:
+              EveryPay environment: demo / live
+      validations:
+          required: true
+    - type: textarea
+      id: logs
+      attributes:
+          label: Relevant log output / stack trace
+          description: Redact credentials and payment references you consider sensitive.
+          render: text

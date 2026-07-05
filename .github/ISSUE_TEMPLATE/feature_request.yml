@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an improvement or a missing EveryPay capability
+labels: [enhancement]
+body:
+    - type: textarea
+      id: problem
+      attributes:
+          label: What problem would this solve?
+          description: Describe the use case, not only the solution.
+      validations:
+          required: true
+    - type: textarea
+      id: proposal
+      attributes:
+          label: Proposed behaviour
+          description: If it maps to an EveryPay API capability (tokens, agreements, capture/void, …), link the relevant part of https://support.every-pay.com/apidoc/main/.
+    - type: checkboxes
+      id: roadmap
+      attributes:
+          label: Roadmap check
+          options:
+              - label: I checked the README roadmap and this is not already listed
