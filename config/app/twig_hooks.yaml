@@ -1,0 +1,11 @@
+sylius_twig_hooks:
+    hooks:
+        # Sylius renders per-factory gateway configuration only through the
+        # `gateway_configuration.<factory>` hook — without these hooks the
+        # EveryPay credential fields silently do not appear on the payment
+        # method form (the form type + attribute alone are not enough).
+        'sylius_admin.payment_method.create.content.form.sections.gateway_configuration.everypay': &everypay_gateway_config
+            everypay:
+                template: '@PkgSyliusEveryPayPlugin/admin/payment_method/form/sections/gateway_configuration/everypay.html.twig'
+                priority: 0
+        'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.everypay': *everypay_gateway_config

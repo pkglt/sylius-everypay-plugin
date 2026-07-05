@@ -1,0 +1,9 @@
+# Validation groups for the EveryPay gateway configuration form.
+# Note: groups REPLACE the Sylius default instead of being merged with it,
+# so `sylius` must be listed explicitly.
+sylius_payment:
+    gateway_config:
+        validation_groups:
+            everypay:
+                - sylius
+                - everypay
