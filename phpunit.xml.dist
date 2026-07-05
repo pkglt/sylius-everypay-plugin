@@ -4,16 +4,27 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          cacheDirectory=".phpunit.cache"
          colors="true"
-         bootstrap="vendor/autoload.php"
-         failOnWarning="true">
+         bootstrap="tests/bootstrap.php">
     <testsuites>
         <testsuite name="unit">
-            <directory>tests</directory>
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="functional">
+            <directory>tests/Functional</directory>
         </testsuite>
     </testsuites>
 
     <php>
         <ini name="error_reporting" value="-1"/>
+        <ini name="memory_limit" value="1G"/>
+
+        <env name="APP_ENV" value="test"/>
+        <env name="APP_DEBUG" value="0"/>
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
+
+        <server name="APP_ENV" value="test"/>
+        <server name="KERNEL_CLASS" value="Sylius\TestApplication\Kernel"/>
+        <server name="IS_DOCTRINE_ORM_SUPPORTED" value="true"/>
     </php>
 
     <source>

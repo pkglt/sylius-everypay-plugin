@@ -6,5 +6,8 @@
 /phpstan.neon
 
 /var/
+
+/tests/TestApplication/.env.local
+/tests/TestApplication/.env.*.local
 /.idea/
 /.claude/settings.local.json

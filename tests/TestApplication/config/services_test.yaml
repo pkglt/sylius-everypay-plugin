@@ -1,0 +1,11 @@
+services:
+    # Scripted EveryPay API responses — tests fetch this public service from the
+    # booted container and queue MockResponse objects onto it.
+    Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock:
+        public: true
+
+    # Point the real API client at the mock; everything else in the pipeline
+    # (bus, transactions, state machines, providers) stays production wiring.
+    Pkg\SyliusEveryPayPlugin\Client\EveryPayApiClient:
+        arguments:
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock'
