@@ -130,10 +130,19 @@ reference.
 
 ```bash
 composer install
-vendor/bin/phpunit           # unit tests
-vendor/bin/phpstan analyse   # static analysis, level 9
-vendor/bin/ecs check         # coding standard (Sylius Labs)
+vendor/bin/phpunit --testsuite unit         # pure unit tests (no kernel, no DB)
+vendor/bin/phpunit --testsuite functional   # boots the plugin inside sylius/test-application
+vendor/bin/phpunit                          # both suites
+vendor/bin/phpstan analyse                  # static analysis, level 9
+vendor/bin/ecs check                        # coding standard (Sylius Labs)
 ```
+
+The functional suite runs the plugin inside the official Sylius test
+application on SQLite with a scripted EveryPay API mock — no database
+service, browser or frontend build required. It covers container wiring,
+the notify endpoint (including a settled callback moving a payment through
+the real state machine), the capture flow on the real payment-request
+command bus, and the admin gateway form rendering.
 
 This repository is set up for AI-agent-assisted development — see
 [AGENTS.md](AGENTS.md) for the project map, invariants and conventions.
@@ -145,7 +154,7 @@ This repository is set up for AI-agent-assisted development — see
 - Tokenized/CIT payments (`request_token`)
 - Per-method direct links (skip the hosted method selector via
   `payment_methods[].payment_link`)
-- Behat/functional coverage against a mocked EveryPay API
+- Behat scenarios on top of the existing functional suite
 
 ## License
 

@@ -25,14 +25,33 @@ Read before non-trivial changes:
 
 ```bash
 composer install
-vendor/bin/phpunit             # unit tests (pure, MockHttpClient — no DB, no kernel)
-vendor/bin/phpstan analyse     # level 9, src/ + tests/
-vendor/bin/ecs check           # Sylius Labs coding standard (--fix to autofix)
+vendor/bin/phpunit --testsuite unit         # pure unit tests (MockHttpClient — no DB, no kernel)
+vendor/bin/phpunit --testsuite functional   # real Sylius kernel via sylius/test-application
+vendor/bin/phpunit                          # both suites — this is what CI runs
+vendor/bin/phpstan analyse                  # level 9, src/ + tests/
+vendor/bin/ecs check                        # Sylius Labs coding standard (--fix to autofix)
 ```
 
-All three must pass before a change is done. There is no test application or
-Behat suite yet (roadmap) — functional verification happens inside a host
-Sylius app.
+All gates must pass before a change is done.
+
+### Test layout
+
+- `tests/Unit/` — pure unit tests, no kernel, no database.
+- `tests/Functional/` — boots the plugin inside `sylius/test-application`
+  (the official shared plugin test app) on **SQLite** with a scripted
+  EveryPay API mock (`tests/Functional/Support/EveryPayHttpMock`, swapped in
+  for the real HTTP client by `tests/TestApplication/config/services_test.yaml`).
+  `FunctionalTestCase` provides schema/reset (`prepareDatabase()`) and
+  programmatic fixtures (channel, everypay payment method, order+payment).
+- `tests/TestApplication/` — the plugin-side overlay the test app bootstrap
+  reads: `.env` (bundle + config registration via `SYLIUS_TEST_APP_*` vars,
+  sync messenger transports, SQLite DSN), `bundles.php`, `config/`.
+- `tests/bootstrap.php` — seeds empty asset manifests and generates the
+  gateway-config encryption key before delegating to the test app bootstrap.
+- Gotcha: `doctrine_lazy_objects.php` enables ORM native lazy objects only on
+  PHP >= 8.4 (var-exporter 8 removed LazyGhost); do not fold it into YAML.
+- Behat is still on the roadmap; the functional suite is the current
+  in-a-real-app verification layer.
 
 ## Architecture in 30 seconds
 
