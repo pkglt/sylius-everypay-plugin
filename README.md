@@ -12,6 +12,10 @@ payment page.
 Built on the modern Sylius **PaymentRequest** abstraction (`sylius/payment-bundle`,
 the same architecture as the official Stripe plugin). **No Payum anywhere.**
 
+EveryPay themselves offer no official Sylius integration and none is planned
+(confirmed by EveryPay support, September 2025) — this community plugin fills
+that gap.
+
 > Not to be confused with everypay.gr (a Greek PSP with the same name).
 
 ## Features
