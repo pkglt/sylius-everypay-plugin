@@ -16,3 +16,8 @@ pkg_everypay:
         display_mode_method_grid: 'Näita makseviiside nuppe poes'
         choose_payment_method: 'Valige makseviis'
         all_payment_options: 'Kõik makseviisid EveryPay lehel'
+        pay_for_order: 'Tellimuse %number% makse'
+        amount_due: 'Tasumisele kuuluv summa'
+        international: 'Rahvusvahelised'
+        after_payment_note: 'Pärast makse sooritamist suunatakse teid tagasi poodi.'
+        back_to_order: 'Tagasi tellimuse juurde'

@@ -135,10 +135,17 @@ final class EveryPayShopContext implements Context
                     'logo_url' => 'https://igw-demo.every-pay.com/assets/seb.svg',
                 ],
                 [
+                    'source' => 'seb_ob_ee',
+                    'display_name' => 'AS SEB Pank',
+                    'country_code' => 'EE',
+                    'payment_link' => self::PAYMENT_LINK . '?method=seb_ob_ee',
+                    'logo_url' => 'https://igw-demo.every-pay.com/assets/seb.svg',
+                ],
+                [
                     'source' => 'card',
                     'display_name' => 'VISA/MasterCard',
                     'country_code' => null,
-                    'payment_link' => null,
+                    'payment_link' => self::PAYMENT_LINK . '?method=card',
                     'logo_url' => 'https://igw-demo.every-pay.com/assets/card.svg',
                 ],
             ],
@@ -155,10 +162,37 @@ final class EveryPayShopContext implements Context
         Assert::contains($content, 'data-test-everypay-method-grid');
         Assert::contains($content, 'Swedbank');
         Assert::contains($content, self::PAYMENT_LINK . '?method=swedbank_ob_lt');
-        // Methods without a per-method link are not shown as buttons...
-        Assert::notContains($content, 'data-test-everypay-method="card"');
-        // ...and the hosted page stays reachable for everything else.
         Assert::contains($content, 'data-test-everypay-hosted-page-link');
+    }
+
+    #[Then('the payment page reads as part of the checkout')]
+    public function thePaymentPageReadsAsPartOfTheCheckout(): void
+    {
+        $content = (string) $this->client->getResponse()->getContent();
+        // Order context: number and the amount due.
+        Assert::contains($content, '000000001');
+        Assert::contains($content, 'data-test-everypay-amount-due');
+        Assert::contains($content, '25.99');
+        Assert::contains($content, 'data-test-everypay-back-to-order');
+    }
+
+    #[Then('the bank buttons are grouped by country, the customer\'s country first')]
+    public function theBankButtonsAreGroupedByCountry(): void
+    {
+        $content = (string) $this->client->getResponse()->getContent();
+
+        $lithuania = strpos($content, 'data-test-everypay-method-group="LT"');
+        $international = strpos($content, 'data-test-everypay-method-group="international"');
+        $estonia = strpos($content, 'data-test-everypay-method-group="EE"');
+        Assert::notFalse($lithuania);
+        Assert::notFalse($international);
+        Assert::notFalse($estonia);
+        // Billing country (LT) first, then international, then the rest.
+        Assert::true($lithuania < $international && $international < $estonia, 'Group order is wrong.');
+
+        // Country names come from the locale-aware Sylius filter.
+        Assert::contains($content, 'Lithuania');
+        Assert::contains($content, 'Estonia');
     }
 
     #[Given('EveryPay will reject the payment creation')]

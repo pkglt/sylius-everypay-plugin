@@ -117,6 +117,50 @@ final class EveryPayGateway
         return $options;
     }
 
+    /**
+     * Groups grid options by country for display: the customer's (billing)
+     * country first, then the international methods (card, Revolut — no
+     * country_code), then the remaining countries in first-seen order.
+     * Order inside each group is EveryPay's.
+     *
+     * @param list<array{source: string, display_name: string, country_code: ?string, payment_link: string, logo_url: ?string}> $options
+     *
+     * @return list<array{country_code: ?string, methods: non-empty-list<array{source: string, display_name: string, country_code: ?string, payment_link: string, logo_url: ?string}>}>
+     */
+    public static function groupPaymentMethodOptions(array $options, ?string $preferredCountry): array
+    {
+        $byCountry = [];
+        foreach ($options as $option) {
+            $byCountry[$option['country_code'] ?? ''][] = $option;
+        }
+
+        $keys = array_map(strval(...), array_keys($byCountry));
+        usort($keys, static function (string $a, string $b) use ($preferredCountry, $byCountry): int {
+            $rank = static function (string $key) use ($preferredCountry, $byCountry): array {
+                if (null !== $preferredCountry && $key === $preferredCountry) {
+                    return [0, 0];
+                }
+                if ('' === $key) {
+                    return [1, 0];
+                }
+
+                return [2, array_search($key, array_keys($byCountry), true)];
+            };
+
+            return $rank($a) <=> $rank($b);
+        });
+
+        $groups = [];
+        foreach ($keys as $key) {
+            $groups[] = [
+                'country_code' => '' === $key ? null : $key,
+                'methods' => $byCountry[$key],
+            ];
+        }
+
+        return $groups;
+    }
+
     public static function corePaymentFrom(PaymentRequestInterface $paymentRequest): PaymentInterface
     {
         $payment = $paymentRequest->getPayment();

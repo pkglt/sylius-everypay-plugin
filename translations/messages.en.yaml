@@ -15,3 +15,8 @@ pkg_everypay:
         display_mode_method_grid: 'Show the payment method buttons in the shop'
         choose_payment_method: 'Choose a payment method'
         all_payment_options: 'See all payment options at EveryPay'
+        pay_for_order: 'Payment for order %number%'
+        amount_due: 'Amount due'
+        international: 'International'
+        after_payment_note: 'After completing the payment you will be brought back to the shop.'
+        back_to_order: 'Back to the order'

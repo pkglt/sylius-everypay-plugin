@@ -1,30 +1,58 @@
 {% extends '@SyliusShop/shared/layout/base.html.twig' %}
 
+{% import '@SyliusShop/shared/macro/money.html.twig' as money %}
+
 {% block title %}{{ 'pkg_everypay.ui.choose_payment_method'|trans }} | {{ parent() }}{% endblock %}
 
 {% block content %}
-    <div class="container my-5" data-test-everypay-method-grid>
-        <h1 class="h2 mb-4">{{ 'pkg_everypay.ui.choose_payment_method'|trans }}</h1>
-
-        <div class="row g-3">
-            {% for method in payment_methods %}
-                <div class="col-6 col-sm-4 col-lg-3">
-                    <a href="{{ method.payment_link }}"
-                       class="card h-100 text-decoration-none text-reset text-center p-3"
-                       data-test-everypay-method="{{ method.source }}">
-                        {% if method.logo_url %}
-                            <img src="{{ method.logo_url }}" alt="{{ method.display_name }}"
-                                 class="mx-auto d-block mb-2" style="max-height: 2.5rem; max-width: 100%;" loading="lazy">
-                        {% endif %}
-                        <span>{{ method.display_name }}</span>
-                    </a>
-                </div>
-            {% endfor %}
+    {% set order = payment.order %}
+    <div class="container my-5" style="max-width: 60rem;" data-test-everypay-method-grid>
+        <div class="mb-4">
+            <h1 class="h2 mb-1">{{ 'pkg_everypay.ui.choose_payment_method'|trans }}</h1>
+            <p class="text-body-secondary mb-1">
+                {{ 'pkg_everypay.ui.pay_for_order'|trans({'%number%': order.number}) }}
+            </p>
+            <p class="fs-4 fw-bold mb-0" data-test-everypay-amount-due>
+                {{ 'pkg_everypay.ui.amount_due'|trans }}: {{ money.format(payment.amount, payment.currencyCode) }}
+            </p>
         </div>
 
-        <p class="mt-4">
+        {% for group in method_groups %}
+            <div class="mb-4" data-test-everypay-method-group="{{ group.country_code ?? 'international' }}">
+                <h2 class="h5 text-body-secondary border-bottom pb-2 mb-3">
+                    {%- if group.country_code -%}
+                        {{ group.country_code|sylius_country_name }}
+                    {%- else -%}
+                        {{ 'pkg_everypay.ui.international'|trans }}
+                    {%- endif -%}
+                </h2>
+                <div class="row g-3">
+                    {% for method in group.methods %}
+                        <div class="col-6 col-sm-4 col-lg-3">
+                            <a href="{{ method.payment_link }}"
+                               class="card h-100 text-decoration-none text-reset text-center p-3"
+                               data-test-everypay-method="{{ method.source }}">
+                                {% if method.logo_url %}
+                                    <img src="{{ method.logo_url }}" alt="{{ method.display_name }}"
+                                         class="mx-auto d-block mb-2" style="max-height: 2.5rem; max-width: 100%;" loading="lazy">
+                                {% endif %}
+                                <span>{{ method.display_name }}</span>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <p class="text-body-secondary mt-4 mb-2">{{ 'pkg_everypay.ui.after_payment_note'|trans }}</p>
+        <p class="mb-1">
             <a href="{{ payment_link }}" data-test-everypay-hosted-page-link>
                 {{ 'pkg_everypay.ui.all_payment_options'|trans }}
+            </a>
+        </p>
+        <p class="mb-0">
+            <a href="{{ path('sylius_shop_order_show', {'tokenValue': order.tokenValue}) }}" data-test-everypay-back-to-order>
+                {{ 'pkg_everypay.ui.back_to_order'|trans }}
             </a>
         </p>
     </div>

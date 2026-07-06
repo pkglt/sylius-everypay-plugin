@@ -9,6 +9,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface as PayumAwareGatewayConfigInterface;
 use Sylius\Component\Core\Factory\PaymentMethodFactoryInterface;
+use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
@@ -45,6 +46,7 @@ final class ShopFixtures
         private readonly FactoryInterface $paymentFactory,
         private readonly FactoryInterface $adjustmentFactory,
         private readonly FactoryInterface $adminUserFactory,
+        private readonly FactoryInterface $addressFactory,
     ) {
     }
 
@@ -174,6 +176,16 @@ final class ShopFixtures
         $order->setTokenValue('everypaytesttoken');
         $order->setState(OrderInterface::STATE_NEW);
         $order->setCheckoutCompletedAt(new \DateTimeImmutable());
+
+        /** @var AddressInterface $billingAddress */
+        $billingAddress = $this->addressFactory->createNew();
+        $billingAddress->setFirstName('Jonas');
+        $billingAddress->setLastName('Jonaitis');
+        $billingAddress->setStreet('Gedimino pr. 1');
+        $billingAddress->setCity('Vilnius');
+        $billingAddress->setPostcode('01103');
+        $billingAddress->setCountryCode('LT');
+        $order->setBillingAddress($billingAddress);
 
         // Give the itemless test order a real total: Sylius' payment
         // processing (e.g. creating a retry payment after a failure) is a

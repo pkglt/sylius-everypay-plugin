@@ -57,3 +57,5 @@ Feature: Paying with EveryPay
         And EveryPay will accept the payment creation with a list of bank methods
         When the customer proceeds to pay
         Then the customer sees the bank buttons instead of being redirected
+        And the payment page reads as part of the checkout
+        And the bank buttons are grouped by country, the customer's country first

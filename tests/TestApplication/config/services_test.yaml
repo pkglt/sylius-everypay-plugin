@@ -24,6 +24,7 @@ services:
             - '@sylius.factory.payment'
             - '@sylius.factory.adjustment'
             - '@sylius.factory.admin_user'
+            - '@sylius.factory.address'
 
     # Behat context (instantiated by friends-of-behat/symfony-extension).
     Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayShopContext:

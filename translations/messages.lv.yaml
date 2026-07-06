@@ -16,3 +16,8 @@ pkg_everypay:
         display_mode_method_grid: 'Rādīt maksājumu veidu pogas veikalā'
         choose_payment_method: 'Izvēlieties maksājuma veidu'
         all_payment_options: 'Visi maksājumu veidi EveryPay lapā'
+        pay_for_order: 'Pasūtījuma %number% apmaksa'
+        amount_due: 'Maksājamā summa'
+        international: 'Starptautiskie'
+        after_payment_note: 'Pēc maksājuma veikšanas jūs atgriezīsieties veikalā.'
+        back_to_order: 'Atpakaļ pie pasūtījuma'
