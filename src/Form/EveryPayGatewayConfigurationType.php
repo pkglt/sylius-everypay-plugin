@@ -31,6 +31,10 @@ final class EveryPayGatewayConfigurationType extends AbstractType
         $builder
             ->add(EveryPayGateway::CONFIG_API_USERNAME, TextType::class, [
                 'label' => 'pkg_everypay.ui.api_username',
+                // Browsers pair a text field followed by a password field as
+                // login credentials and offer to save/autofill them — an
+                // autofilled secret would silently overwrite the stored one.
+                'attr' => ['autocomplete' => 'off'],
                 'constraints' => [
                     new NotBlank(groups: ['everypay']),
                 ],
@@ -39,6 +43,7 @@ final class EveryPayGatewayConfigurationType extends AbstractType
                 'label' => 'pkg_everypay.ui.api_secret',
                 'help' => 'pkg_everypay.ui.api_secret_help',
                 'required' => false,
+                'attr' => ['autocomplete' => 'new-password'],
                 'constraints' => [
                     new NotBlank(groups: ['everypay']),
                 ],

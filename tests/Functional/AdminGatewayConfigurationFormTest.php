@@ -43,6 +43,11 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
         // Labels prove the plugin translations are wired into the form.
         self::assertStringContainsString('Processing account', $content);
         self::assertStringContainsString('leave empty to keep the currently stored secret', $content);
+
+        // Browsers must not save/autofill the credential pair — an autofilled
+        // secret would silently overwrite the stored one on save.
+        self::assertStringContainsString('autocomplete="new-password"', $content);
+        self::assertStringContainsString('autocomplete="off"', $content);
     }
 
     private function createAdminUser(): AdminUserInterface
