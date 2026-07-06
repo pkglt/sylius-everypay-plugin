@@ -1,0 +1,15 @@
+default:
+    extensions:
+        FriendsOfBehat\SymfonyExtension:
+            bootstrap: tests/bootstrap.php
+            kernel:
+                class: Sylius\TestApplication\Kernel
+                environment: test
+                debug: false
+
+    suites:
+        everypay:
+            paths:
+                - features
+            contexts:
+                - Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayShopContext

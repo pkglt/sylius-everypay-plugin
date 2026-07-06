@@ -45,3 +45,6 @@ jobs:
 
             - name: Tests (unit + functional)
               run: vendor/bin/phpunit
+
+            - name: Behat scenarios
+              run: vendor/bin/behat --no-interaction --strict -f progress

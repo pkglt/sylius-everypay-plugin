@@ -150,6 +150,7 @@ composer install
 vendor/bin/phpunit --testsuite unit         # pure unit tests (no kernel, no DB)
 vendor/bin/phpunit --testsuite functional   # boots the plugin inside sylius/test-application
 vendor/bin/phpunit                          # both suites
+vendor/bin/behat                            # Gherkin payment-lifecycle scenarios
 vendor/bin/phpstan analyse                  # static analysis, level 9
 vendor/bin/ecs check                        # coding standard (Sylius Labs)
 ```
@@ -171,7 +172,7 @@ This repository is set up for AI-agent-assisted development — see
 - Tokenized/CIT payments (`request_token`)
 - Per-method direct links (skip the hosted method selector via
   `payment_methods[].payment_link`)
-- Behat scenarios on top of the existing functional suite
+- More Behat scenarios (admin credential management, portal-refund loop guard)
 
 ## Contributing & security
 

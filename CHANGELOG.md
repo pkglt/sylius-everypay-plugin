@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Behat suite: Gherkin scenarios for the shop payment lifecycle (redirect to
+  the hosted page, settled return, callback settle when the customer never
+  returns, failure with automatic retry payment), running on the same test
+  application and scripted EveryPay mock as the functional suite.
+
 ## [0.1.2] - 2026-07-06
 
 Supersedes the retracted v0.1.1: its git history and test fixtures carried
@@ -58,5 +67,6 @@ end-to-end against the EveryPay/SEB demo environment.
 
 > v0.1.0 was retracted minutes after publishing (identical functionality).
 
+[Unreleased]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.1.2...HEAD
 [0.1.2]: https://github.com/pkglt/sylius-everypay-plugin/releases/tag/v0.1.2
 [0.1.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.1.2...v0.1.1

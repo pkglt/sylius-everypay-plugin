@@ -33,6 +33,8 @@
     },
     "require-dev": {
         "api-platform/json-schema": "^4.2",
+        "behat/behat": "^3.14",
+        "friends-of-behat/symfony-extension": "^2.6",
         "knplabs/knp-menu-bundle": "^3.5",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.0",

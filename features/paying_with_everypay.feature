@@ -1,0 +1,36 @@
+Feature: Paying with EveryPay
+    In order to pay for my order with a card or my bank
+    As a Customer
+    I want to be sent to the EveryPay hosted payment page and have my payment settled reliably
+
+    Background:
+        Given the store operates a channel with EveryPay payments
+        And there is an order awaiting payment
+
+    Scenario: Being redirected to the EveryPay hosted payment page
+        Given EveryPay will accept the payment creation
+        When the customer proceeds to pay
+        Then the customer is redirected to the EveryPay payment page
+        And the EveryPay payment reference is stored on the payment
+
+    Scenario: Completing the payment after returning from EveryPay
+        Given EveryPay will accept the payment creation
+        And the customer proceeds to pay
+        And EveryPay reports the payment as settled
+        When the customer returns from the EveryPay payment page
+        Then the payment is completed
+        And the customer lands on the thank you page
+
+    Scenario: The server callback settles the payment when the customer never returns
+        Given EveryPay will accept the payment creation
+        And the customer proceeds to pay
+        And EveryPay reports the payment as settled
+        When EveryPay delivers the payment callback
+        Then the callback is acknowledged
+        And the payment is completed
+
+    Scenario: Recovering when EveryPay rejects the payment creation
+        Given EveryPay will reject the payment creation
+        When the customer proceeds to pay
+        Then the payment is failed
+        And the customer can retry with a fresh payment

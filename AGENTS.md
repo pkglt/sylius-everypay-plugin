@@ -27,7 +27,8 @@ Read before non-trivial changes:
 composer install
 vendor/bin/phpunit --testsuite unit         # pure unit tests (MockHttpClient — no DB, no kernel)
 vendor/bin/phpunit --testsuite functional   # real Sylius kernel via sylius/test-application
-vendor/bin/phpunit                          # both suites — this is what CI runs
+vendor/bin/phpunit                          # both suites
+vendor/bin/behat --strict                   # Gherkin scenarios (CI runs phpunit + behat)
 vendor/bin/phpstan analyse                  # level 9, src/ + tests/ (TestApplication config excluded)
 vendor/bin/ecs check                        # Sylius Labs coding standard (--fix to autofix)
 ```
@@ -62,8 +63,14 @@ var/cache` before the functional suite.
 - Gotcha: the functional kernel runs with `APP_DEBUG=0` (faster, less memory),
   so the compiled container does NOT track config changes — after touching
   DI/config files, `rm -rf var/cache` before trusting a test run.
-- Behat is still on the roadmap; the functional suite is the current
-  in-a-real-app verification layer.
+- `features/` + `tests/Behat/Context/EveryPayShopContext.php` — Gherkin
+  scenarios driving the shop payment lifecycle over real HTTP routes
+  (redirect to hosted page, settled return, callback settle, failure+retry).
+  Redirects are followed manually so the external hand-off stays observable;
+  the context disables kernel reboot so the scripted mock survives a
+  scenario's multiple requests. Context services are wired explicitly in
+  tests/TestApplication/config/services_test.yaml; fixtures live in the
+  shared tests/Support/ShopFixtures service used by both suites.
 
 ## Architecture in 30 seconds
 
