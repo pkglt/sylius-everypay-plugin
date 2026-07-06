@@ -44,9 +44,10 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
         self::assertStringContainsString('Processing account', $content);
         self::assertStringContainsString('leave empty to keep the currently stored secret', $content);
 
-        // Browsers must not save/autofill the credential pair — an autofilled
-        // secret would silently overwrite the stored one on save.
-        self::assertStringContainsString('autocomplete="new-password"', $content);
+        // Browsers must neither save/autofill the credential pair (an
+        // autofilled secret would silently overwrite the stored one) nor
+        // offer to GENERATE a password — the secret is issued by EveryPay.
+        self::assertStringContainsString('autocomplete="one-time-code"', $content);
         self::assertStringContainsString('autocomplete="off"', $content);
     }
 
