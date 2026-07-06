@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-07-06
+
+### Changed
+
+- The in-shop payment method page now reads as part of the checkout: order
+  number, amount due, a "you will return to the shop" note and a back-to-order
+  link; methods are grouped by country (locale-aware country names), with the
+  customer's billing country first, international methods (card, Revolut)
+  second, and the remaining countries after — instead of one flat list where
+  every Baltic bank appeared three times.
+- Template contract: `method_groups` + `payment` replace the flat
+  `payment_methods` variable — re-check any template override.
+
 ## [0.2.2] - 2026-07-06
 
 ### Fixed
@@ -106,6 +119,7 @@ end-to-end against the EveryPay/SEB demo environment.
 
 > v0.1.0 was retracted minutes after publishing (identical functionality).
 
+[0.3.0]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.1.2...v0.2.0
