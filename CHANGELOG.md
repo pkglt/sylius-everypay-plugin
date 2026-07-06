@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Behat suite: Gherkin scenarios for the shop payment lifecycle (redirect to
-  the hosted page, settled return, callback settle when the customer never
-  returns, failure with automatic retry payment), running on the same test
-  application and scripted EveryPay mock as the functional suite.
+- Behat suite (11 scenarios) on the same test application and scripted
+  EveryPay mock as the functional suite: the shop payment lifecycle
+  (redirect to the hosted page, settled return, callback settle when the
+  customer never returns, failure with automatic retry payment, pay-page
+  reload and duplicate-callback idempotency), refunds (admin refund calls
+  EveryPay exactly once, a refund made in the EveryPay portal is never
+  refunded twice, a failed refund leaves the payment completed) and admin
+  credential management (fields render through the twig hook, a blank
+  password field keeps the stored API secret).
 
 ## [0.1.2] - 2026-07-06
 

@@ -63,14 +63,21 @@ var/cache` before the functional suite.
 - Gotcha: the functional kernel runs with `APP_DEBUG=0` (faster, less memory),
   so the compiled container does NOT track config changes — after touching
   DI/config files, `rm -rf var/cache` before trusting a test run.
-- `features/` + `tests/Behat/Context/EveryPayShopContext.php` — Gherkin
-  scenarios driving the shop payment lifecycle over real HTTP routes
-  (redirect to hosted page, settled return, callback settle, failure+retry).
-  Redirects are followed manually so the external hand-off stays observable;
-  the context disables kernel reboot so the scripted mock survives a
-  scenario's multiple requests. Context services are wired explicitly in
+- `features/` + `tests/Behat/Context/` — Gherkin scenarios over real HTTP
+  routes and services: the shop payment lifecycle (redirect to hosted page,
+  settled return, callback settle, failure+retry, reload/callback
+  idempotency), refunds (admin refund, portal-refund loop guard, failed
+  refund leaves the payment untouched) and admin credential management
+  (fields render, blank password keeps the stored secret through the real
+  update controller + encryption). Redirects are followed manually so the
+  external hand-off stays observable; EveryPayShopContext's hook disables
+  kernel reboot and publishes the browser via SharedStorage — test.client
+  is a PROTOTYPE service, injecting it into several contexts yields
+  different browsers. Context services are wired explicitly in
   tests/TestApplication/config/services_test.yaml; fixtures live in the
   shared tests/Support/ShopFixtures service used by both suites.
+  behat.yml.dist sets calls.error_reporting to exclude deprecations —
+  Behat otherwise fails steps on vendor deprecations under newer PHP.
 
 ## Architecture in 30 seconds
 
@@ -179,5 +186,4 @@ source of truth.
 
 Partial refunds via `sylius/refund-plugin` (adoption path documented in
 `docs/architecture.md` — the workflow listener must be guarded when adopted),
-tokenized/CIT payments, per-method direct payment links, Behat/functional
-coverage against a mocked EveryPay API.
+tokenized/CIT payments, per-method direct payment links.

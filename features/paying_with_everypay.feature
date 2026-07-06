@@ -34,3 +34,20 @@ Feature: Paying with EveryPay
         When the customer proceeds to pay
         Then the payment is failed
         And the customer can retry with a fresh payment
+
+    Scenario: Reloading the payment page does not create a second EveryPay payment
+        Given EveryPay will accept the payment creation
+        And the customer proceeds to pay
+        When the customer proceeds to pay again
+        Then the customer is redirected to the EveryPay payment page
+        And only one payment creation request was sent to EveryPay
+
+    Scenario: Repeated callbacks are handled idempotently
+        Given EveryPay will accept the payment creation
+        And the customer proceeds to pay
+        And EveryPay reports the payment as settled
+        And EveryPay delivers the payment callback
+        And EveryPay reports the payment as settled
+        When EveryPay delivers the payment callback
+        Then the callback is acknowledged
+        And the payment is completed

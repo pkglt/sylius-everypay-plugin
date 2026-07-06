@@ -9,6 +9,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Sylius\Bundle\PayumBundle\Model\GatewayConfigInterface as PayumAwareGatewayConfigInterface;
 use Sylius\Component\Core\Factory\PaymentMethodFactoryInterface;
+use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -43,6 +44,7 @@ final class ShopFixtures
         private readonly FactoryInterface $orderFactory,
         private readonly FactoryInterface $paymentFactory,
         private readonly FactoryInterface $adjustmentFactory,
+        private readonly FactoryInterface $adminUserFactory,
     ) {
     }
 
@@ -132,6 +134,22 @@ final class ShopFixtures
         return $method;
     }
 
+    public function createAdminUser(): AdminUserInterface
+    {
+        /** @var AdminUserInterface $admin */
+        $admin = $this->adminUserFactory->createNew();
+        $admin->setUsername('admin');
+        $admin->setEmail('admin@example.com');
+        $admin->setLocaleCode('en_US');
+        $admin->setEnabled(true);
+        $admin->setPlainPassword('irrelevant-password');
+
+        $this->entityManager->persist($admin);
+        $this->entityManager->flush();
+
+        return $admin;
+    }
+
     /**
      * @param array<string, mixed> $paymentDetails
      */
@@ -140,6 +158,7 @@ final class ShopFixtures
         PaymentMethodInterface $method,
         array $paymentDetails = [],
         int $amount = 1000,
+        string $paymentState = BasePaymentInterface::STATE_NEW,
     ): PaymentInterface {
         /** @var CustomerInterface $customer */
         $customer = $this->customerFactory->createNew();
@@ -172,7 +191,7 @@ final class ShopFixtures
         $payment->setMethod($method);
         $payment->setCurrencyCode('EUR');
         $payment->setAmount($amount);
-        $payment->setState(BasePaymentInterface::STATE_NEW);
+        $payment->setState($paymentState);
         $payment->setDetails($paymentDetails);
         $order->addPayment($payment);
 

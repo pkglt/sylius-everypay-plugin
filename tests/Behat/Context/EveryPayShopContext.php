@@ -17,6 +17,7 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentInterface as BasePaymentInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\Routing\RouterInterface;
+use Tests\Pkg\SyliusEveryPayPlugin\Behat\SharedStorage;
 use Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock;
 use Tests\Pkg\SyliusEveryPayPlugin\Support\ShopFixtures;
 use Webmozart\Assert\Assert;
@@ -50,6 +51,7 @@ final class EveryPayShopContext implements Context
         private readonly ShopFixtures $shopFixtures,
         private readonly EntityManagerInterface $entityManager,
         private readonly RouterInterface $router,
+        private readonly SharedStorage $sharedStorage,
     ) {
     }
 
@@ -60,6 +62,10 @@ final class EveryPayShopContext implements Context
         // the entities must survive across the requests a scenario performs.
         $this->client->disableReboot();
         $this->client->followRedirects(false);
+        // test.client is a prototype service — every injection is a fresh
+        // browser. Publish this one so all contexts drive the same browser
+        // (and therefore the same un-rebooted container).
+        $this->sharedStorage->set('client', $this->client);
         $this->shopFixtures->prepareDatabase();
     }
 
@@ -68,6 +74,8 @@ final class EveryPayShopContext implements Context
     {
         $this->channel = $this->shopFixtures->createShopEnvironment();
         $this->paymentMethod = $this->shopFixtures->createEveryPayPaymentMethod($this->channel);
+        $this->sharedStorage->set('channel', $this->channel);
+        $this->sharedStorage->set('payment_method', $this->paymentMethod);
     }
 
     #[Given('there is an order awaiting payment')]
@@ -76,6 +84,7 @@ final class EveryPayShopContext implements Context
         Assert::notNull($this->channel);
         Assert::notNull($this->paymentMethod);
         $this->payment = $this->shopFixtures->createOrderWithPayment($this->channel, $this->paymentMethod, amount: 2599);
+        $this->sharedStorage->set('payment', $this->payment);
     }
 
     #[Given('EveryPay will accept the payment creation')]
@@ -119,6 +128,23 @@ final class EveryPayShopContext implements Context
         ]);
 
         $this->browseFrom($payUrl);
+    }
+
+    #[When('the customer proceeds to pay again')]
+    public function theCustomerProceedsToPayAgain(): void
+    {
+        $this->theCustomerProceedsToPay();
+    }
+
+    #[Then('only one payment creation request was sent to EveryPay')]
+    public function onlyOnePaymentCreationRequestWasSentToEveryPay(): void
+    {
+        $oneoffRequests = array_filter(
+            $this->everyPayApi->recordedRequests(),
+            static fn (array $request): bool => str_contains($request['url'], '/v4/payments/oneoff'),
+        );
+
+        Assert::count($oneoffRequests, 1);
     }
 
     #[Then('the customer is redirected to the EveryPay payment page')]

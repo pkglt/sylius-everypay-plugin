@@ -172,7 +172,6 @@ This repository is set up for AI-agent-assisted development — see
 - Tokenized/CIT payments (`request_token`)
 - Per-method direct links (skip the hosted method selector via
   `payment_methods[].payment_link`)
-- More Behat scenarios (admin credential management, portal-refund loop guard)
 
 ## Contributing & security
 

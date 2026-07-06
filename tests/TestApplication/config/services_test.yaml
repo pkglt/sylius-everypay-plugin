@@ -23,6 +23,7 @@ services:
             - '@sylius.factory.order'
             - '@sylius.factory.payment'
             - '@sylius.factory.adjustment'
+            - '@sylius.factory.admin_user'
 
     # Behat context (instantiated by friends-of-behat/symfony-extension).
     Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayShopContext:
@@ -31,5 +32,26 @@ services:
             - '@test.client'
             - '@Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock'
             - '@Tests\Pkg\SyliusEveryPayPlugin\Support\ShopFixtures'
+            - '@doctrine.orm.default_entity_manager'
+            - '@router'
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Behat\SharedStorage'
+
+    Tests\Pkg\SyliusEveryPayPlugin\Behat\SharedStorage:
+        public: true
+
+    Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayRefundContext:
+        public: true
+        arguments:
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock'
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Support\ShopFixtures'
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Behat\SharedStorage'
+            - '@doctrine.orm.default_entity_manager'
+            - '@Sylius\Abstraction\StateMachine\StateMachineInterface'
+
+    Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayAdminContext:
+        public: true
+        arguments:
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Support\ShopFixtures'
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Behat\SharedStorage'
             - '@doctrine.orm.default_entity_manager'
             - '@router'

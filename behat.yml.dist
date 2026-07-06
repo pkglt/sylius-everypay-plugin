@@ -1,4 +1,9 @@
 default:
+    # E_ALL without E_DEPRECATED/E_USER_DEPRECATED — vendor deprecations on
+    # newer PHP versions must not fail scenario steps.
+    calls:
+        error_reporting: 8191
+
     extensions:
         FriendsOfBehat\SymfonyExtension:
             bootstrap: tests/bootstrap.php
@@ -13,3 +18,5 @@ default:
                 - features
             contexts:
                 - Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayShopContext
+                - Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayRefundContext
+                - Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayAdminContext
