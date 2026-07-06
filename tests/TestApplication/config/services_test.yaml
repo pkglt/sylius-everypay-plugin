@@ -9,3 +9,27 @@ services:
     Pkg\SyliusEveryPayPlugin\Client\EveryPayApiClient:
         arguments:
             - '@Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock'
+
+    # Programmatic fixtures shared by the functional suite and Behat contexts.
+    Tests\Pkg\SyliusEveryPayPlugin\Support\ShopFixtures:
+        public: true
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+            - '@sylius.factory.currency'
+            - '@sylius.factory.locale'
+            - '@sylius.factory.channel'
+            - '@sylius.factory.payment_method'
+            - '@sylius.factory.customer'
+            - '@sylius.factory.order'
+            - '@sylius.factory.payment'
+            - '@sylius.factory.adjustment'
+
+    # Behat context (instantiated by friends-of-behat/symfony-extension).
+    Tests\Pkg\SyliusEveryPayPlugin\Behat\Context\EveryPayShopContext:
+        public: true
+        arguments:
+            - '@test.client'
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock'
+            - '@Tests\Pkg\SyliusEveryPayPlugin\Support\ShopFixtures'
+            - '@doctrine.orm.default_entity_manager'
+            - '@router'
