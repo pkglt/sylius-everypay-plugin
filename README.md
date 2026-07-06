@@ -17,6 +17,11 @@ the same architecture as the official Stripe plugin). **No Payum anywhere.**
 ## Features
 
 - **One-off payments** via the EveryPay hosted payment page (cards, bank links, wallets)
+- **In-shop payment method buttons** (optional): show the bank/card grid with
+  EveryPay's own logos directly in your store and send customers straight to
+  their bank's payment page — or keep the classic redirect (default)
+- **Credential verification on save** — definitively wrong API credentials are
+  rejected in the admin form; an unreachable EveryPay never blocks saving
 - **Server-to-server callbacks** — unauthenticated callbacks are never trusted;
   the payment state is always re-read from the EveryPay API (the single source of truth)
 - **Idempotent state synchronization** — customer return and callbacks may arrive
@@ -80,6 +85,11 @@ In the Sylius admin: *Payment methods → Create*, choose the **EveryPay
 | API username / API secret | EveryPay merchant portal → *Merchant settings → General* |
 | Processing account | e.g. `EUR3D1` — shown in the portal; fixes the currency and available methods |
 | Environment | Demo (`igw-demo.every-pay.com`) or Live (`pay.every-pay.eu`) |
+| Checkout appearance | Redirect to EveryPay (default), or show the payment method buttons in the shop |
+
+Credentials are verified against the EveryPay API when you save the form —
+a wrong secret or an unknown processing account fails validation with a
+clear message (network problems never block saving).
 
 Because no Payum factory named `everypay` exists, Sylius automatically stores
 `use_payum = 0` on the gateway config and routes checkout through the
@@ -170,8 +180,6 @@ This repository is set up for AI-agent-assisted development — see
 - Partial refunds via `sylius/refund-plugin` integration
   (the API client already accepts arbitrary amounts)
 - Tokenized/CIT payments (`request_token`)
-- Per-method direct links (skip the hosted method selector via
-  `payment_methods[].payment_link`)
 
 ## Contributing & security
 

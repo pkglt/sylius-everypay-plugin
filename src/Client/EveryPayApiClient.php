@@ -60,6 +60,24 @@ final class EveryPayApiClient
     }
 
     /**
+     * GET /v4/processing_accounts/{account_name} — the cheapest authenticated
+     * call there is; used to verify admin-entered credentials. A short
+     * timeout keeps the admin form responsive.
+     *
+     * @return array<string, mixed>
+     */
+    public function getProcessingAccount(EveryPayCredentials $credentials, ?float $timeout = null): array
+    {
+        $path = sprintf(
+            '/v4/processing_accounts/%s?api_username=%s',
+            rawurlencode($credentials->accountName),
+            rawurlencode($credentials->apiUsername),
+        );
+
+        return $this->request($credentials, 'GET', $path, timeout: $timeout);
+    }
+
+    /**
      * POST /v4/payments/refund — full or partial refund of a settled payment.
      *
      * @return array<string, mixed>
@@ -80,11 +98,11 @@ final class EveryPayApiClient
      *
      * @return array<string, mixed>
      */
-    private function request(EveryPayCredentials $credentials, string $method, string $path, ?array $body = null): array
+    private function request(EveryPayCredentials $credentials, string $method, string $path, ?array $body = null, ?float $timeout = null): array
     {
         $options = [
             'auth_basic' => [$credentials->apiUsername, $credentials->apiSecret],
-            'timeout' => self::REQUEST_TIMEOUT,
+            'timeout' => $timeout ?? self::REQUEST_TIMEOUT,
         ];
         if ($body !== null) {
             $options['json'] = $body;
@@ -95,7 +113,7 @@ final class EveryPayApiClient
             $statusCode = $response->getStatusCode();
             $content = $response->getContent(false);
         } catch (HttpClientExceptionInterface $e) {
-            throw new EveryPayApiException(sprintf('EveryPay request %s %s failed: %s', $method, $path, $e->getMessage()), 0, $e);
+            throw new EveryPayApiException(sprintf('EveryPay request %s %s failed: %s', $method, $path, $e->getMessage()), previous: $e);
         }
 
         $data = json_decode($content, true);
@@ -107,11 +125,11 @@ final class EveryPayApiClient
                 $method,
                 $path,
                 $this->extractErrorMessage($data, $content),
-            ));
+            ), $statusCode);
         }
 
         if (!is_array($data)) {
-            throw new EveryPayApiException(sprintf('EveryPay returned a non-JSON body to %s %s: %s', $method, $path, $content));
+            throw new EveryPayApiException(sprintf('EveryPay returned a non-JSON body to %s %s: %s', $method, $path, $content), $statusCode);
         }
 
         /** @var array<string, mixed> $decoded */

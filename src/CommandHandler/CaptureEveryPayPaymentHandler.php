@@ -122,6 +122,9 @@ final readonly class CaptureEveryPayPaymentHandler
         $paymentRequest->setResponseData([
             'payment_link' => $paymentLink,
             'payment_reference' => $paymentReference,
+            // Per-method direct links (bank buttons) for the optional
+            // in-shop method grid; empty when EveryPay returns none.
+            'payment_methods' => EveryPayGateway::paymentMethodOptionsFrom($response['payment_methods'] ?? null),
         ]);
 
         // The payment intentionally stays in `new`: PaymentToPayResolver only

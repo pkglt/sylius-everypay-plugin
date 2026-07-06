@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pkg\SyliusEveryPayPlugin\Form;
 
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
+use Pkg\SyliusEveryPayPlugin\Validator\Constraints\ValidEveryPayCredentials;
 use Sylius\Bundle\PaymentBundle\Attribute\AsGatewayConfigurationType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -13,6 +14,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 /**
@@ -55,6 +57,15 @@ final class EveryPayGatewayConfigurationType extends AbstractType
                     'pkg_everypay.ui.environment_live' => EveryPayGateway::ENVIRONMENT_LIVE,
                 ],
                 'empty_data' => EveryPayGateway::ENVIRONMENT_DEMO,
+            ])
+            ->add(EveryPayGateway::CONFIG_DISPLAY_MODE, ChoiceType::class, [
+                'label' => 'pkg_everypay.ui.display_mode',
+                'help' => 'pkg_everypay.ui.display_mode_help',
+                'choices' => [
+                    'pkg_everypay.ui.display_mode_redirect' => EveryPayGateway::DISPLAY_MODE_REDIRECT,
+                    'pkg_everypay.ui.display_mode_method_grid' => EveryPayGateway::DISPLAY_MODE_METHOD_GRID,
+                ],
+                'empty_data' => EveryPayGateway::DISPLAY_MODE_REDIRECT,
             ]);
 
         // A password input never re-renders its stored value, so an untouched
@@ -73,5 +84,22 @@ final class EveryPayGatewayConfigurationType extends AbstractType
                 $event->setData($submitted);
             }
         });
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults([
+            // The parent GatewayConfigType pins its subtree to the `sylius`
+            // group, so the factory-specific groups from
+            // sylius_payment.gateway_config.validation_groups never reach
+            // this form — declare them here or no `everypay` constraint
+            // (including the NotBlank rules above) would ever run.
+            'validation_groups' => ['sylius', 'everypay'],
+            // Definitive credential rejections fail the save; unreachable
+            // EveryPay never does (see the validator).
+            'constraints' => [
+                new ValidEveryPayCredentials(groups: ['everypay']),
+            ],
+        ]);
     }
 }

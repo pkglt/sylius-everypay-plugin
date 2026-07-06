@@ -137,7 +137,22 @@ source of truth.
   → `templates/admin/payment_method/...`). The form type alone is not enough;
   if fields "silently disappear", look there first.
 - Validation groups **replace** the Sylius default — `sylius` must always be
-  listed alongside `everypay` in `config/app/sylius_payment.yaml`.
+  listed alongside `everypay` in `config/app/sylius_payment.yaml`. And a trap:
+  Sylius' GatewayConfigType pins its form subtree to the `sylius` group, so
+  the factory-specific groups never reach the config form through the form
+  tree — `EveryPayGatewayConfigurationType::configureOptions()` declares
+  `validation_groups: [sylius, everypay]` itself. Removing that silently
+  disables every `everypay`-group constraint (NotBlank, the credential check).
+- The credential check (`Validator/Constraints/ValidEveryPayCredentials`)
+  fails saves only on definitive rejections (401/403/404 from
+  /v4/processing_accounts); transport errors and 5xx never block — trust
+  admin data when it cannot be verified.
+- The in-shop method grid is opt-in via gateway config `display_mode`
+  (`EveryPayGateway::DISPLAY_MODE_*`); the capture handler stores sanitized
+  `payment_methods` (only entries with a per-method payment_link) in the
+  payment request responseData, and EveryPayHttpResponseProvider renders
+  templates/shop/method_grid.html.twig instead of redirecting. Always keep
+  the redirect fallback — EveryPay may return no per-method links.
 - `EveryPayGateway` holds all shared constants (factory name, config keys,
   base URLs, payment-details helpers). Don't scatter string literals.
 - **The after-pay URL is a seam** (`Provider/AfterPayUrlProviderInterface`):

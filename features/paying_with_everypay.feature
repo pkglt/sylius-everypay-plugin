@@ -51,3 +51,9 @@ Feature: Paying with EveryPay
         When EveryPay delivers the payment callback
         Then the callback is acknowledged
         And the payment is completed
+
+    Scenario: Choosing the bank directly in the shop
+        Given the EveryPay payment method shows the method buttons in the shop
+        And EveryPay will accept the payment creation with a list of bank methods
+        When the customer proceeds to pay
+        Then the customer sees the bank buttons instead of being redirected

@@ -1,0 +1,4 @@
+pkg_everypay:
+    credentials:
+        rejected: 'EveryPay atmetė šiuos API prisijungimo duomenis — patikrinkite API naudotojo vardą ir slaptažodį pardavėjo portale.'
+        account_not_found: 'EveryPay neranda tokios apdorojimo sąskaitos su šiais prisijungimo duomenimis.'

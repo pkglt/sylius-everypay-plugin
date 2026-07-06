@@ -34,8 +34,14 @@ final readonly class EveryPayCredentials
 
     public static function fromGatewayConfig(GatewayConfigInterface $gatewayConfig): self
     {
-        $config = $gatewayConfig->getConfig();
+        return self::fromConfig($gatewayConfig->getConfig());
+    }
 
+    /**
+     * @param array<array-key, mixed> $config
+     */
+    public static function fromConfig(array $config): self
+    {
         $environment = self::stringValue($config, EveryPayGateway::CONFIG_ENVIRONMENT);
         $baseUrl = EveryPayGateway::BASE_URLS[$environment] ?? EveryPayGateway::BASE_URLS[EveryPayGateway::ENVIRONMENT_DEMO];
 

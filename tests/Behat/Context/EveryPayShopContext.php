@@ -100,6 +100,67 @@ final class EveryPayShopContext implements Context
         ], 201);
     }
 
+    #[Given('the EveryPay payment method shows the method buttons in the shop')]
+    public function theEveryPayPaymentMethodShowsTheMethodButtonsInTheShop(): void
+    {
+        Assert::notNull($this->paymentMethod);
+        $gatewayConfig = $this->paymentMethod->getGatewayConfig();
+        Assert::notNull($gatewayConfig);
+        $gatewayConfig->setConfig(array_merge($gatewayConfig->getConfig(), [
+            EveryPayGateway::CONFIG_DISPLAY_MODE => EveryPayGateway::DISPLAY_MODE_METHOD_GRID,
+        ]));
+        $this->entityManager->flush();
+    }
+
+    #[Given('EveryPay will accept the payment creation with a list of bank methods')]
+    public function everyPayWillAcceptThePaymentCreationWithAListOfBankMethods(): void
+    {
+        $this->everyPayApi->queueJson([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+            'payment_state' => 'initial',
+            'payment_methods' => [
+                [
+                    'source' => 'swedbank_ob_lt',
+                    'display_name' => 'Swedbank',
+                    'country_code' => 'LT',
+                    'payment_link' => self::PAYMENT_LINK . '?method=swedbank_ob_lt',
+                    'logo_url' => 'https://igw-demo.every-pay.com/assets/swedbank.svg',
+                ],
+                [
+                    'source' => 'seb_ob_lt',
+                    'display_name' => 'SEB',
+                    'country_code' => 'LT',
+                    'payment_link' => self::PAYMENT_LINK . '?method=seb_ob_lt',
+                    'logo_url' => 'https://igw-demo.every-pay.com/assets/seb.svg',
+                ],
+                [
+                    'source' => 'card',
+                    'display_name' => 'VISA/MasterCard',
+                    'country_code' => null,
+                    'payment_link' => null,
+                    'logo_url' => 'https://igw-demo.every-pay.com/assets/card.svg',
+                ],
+            ],
+        ], 201);
+    }
+
+    #[Then('the customer sees the bank buttons instead of being redirected')]
+    public function theCustomerSeesTheBankButtonsInsteadOfBeingRedirected(): void
+    {
+        Assert::null($this->externalRedirectUrl, 'Expected the in-shop method grid, got an external redirect.');
+        Assert::true($this->client->getResponse()->isSuccessful());
+
+        $content = (string) $this->client->getResponse()->getContent();
+        Assert::contains($content, 'data-test-everypay-method-grid');
+        Assert::contains($content, 'Swedbank');
+        Assert::contains($content, self::PAYMENT_LINK . '?method=swedbank_ob_lt');
+        // Methods without a per-method link are not shown as buttons...
+        Assert::notContains($content, 'data-test-everypay-method="card"');
+        // ...and the hosted page stays reachable for everything else.
+        Assert::contains($content, 'data-test-everypay-hosted-page-link');
+    }
+
     #[Given('EveryPay will reject the payment creation')]
     public function everyPayWillRejectThePaymentCreation(): void
     {

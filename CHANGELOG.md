@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Optional in-shop payment method grid: with "Checkout appearance" set to
+  the method buttons, customers pick their bank/card inside the store (with
+  EveryPay's method logos) and land directly on the chosen payment page;
+  methods without a per-method link fall back to the hosted page.
+- Gateway credentials are verified against the EveryPay API when the admin
+  saves the payment method — definitive rejections (bad secret, unknown
+  processing account) fail validation, an unreachable EveryPay never blocks
+  saving.
+
+### Fixed
+
+- Validation constraints in the `everypay` group (e.g. required credential
+  fields) never actually ran: Sylius pins the gateway-config form subtree to
+  the `sylius` validation group, so the factory-specific groups from
+  `sylius_payment.gateway_config.validation_groups` do not reach it. The
+  gateway configuration form now declares its own groups.
+
 - Behat suite (11 scenarios) on the same test application and scripted
   EveryPay mock as the functional suite: the shop payment lifecycle
   (redirect to the hosted page, settled return, callback settle when the

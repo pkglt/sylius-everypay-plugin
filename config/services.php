@@ -29,6 +29,7 @@ return static function (ContainerConfigurator $configurator): void {
             __DIR__ . '/../src/Client/EveryPayApiException.php',
             __DIR__ . '/../src/Client/EveryPayCredentials.php',
             __DIR__ . '/../src/Provider/SyliusShopAfterPayUrlProvider.php',
+            __DIR__ . '/../src/Validator/Constraints/ValidEveryPayCredentials.php',
         ]);
 
     // Headless default — config/services/integrations/sylius_shop.php

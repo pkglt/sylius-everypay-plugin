@@ -12,5 +12,12 @@ Feature: Managing the EveryPay payment method
         Then I should see the EveryPay credential fields
 
     Scenario: Keeping the stored API secret when leaving the field blank
+        Given EveryPay will accept the credential check
         When I edit the EveryPay payment method leaving the API secret blank
         Then the previously stored API secret is kept
+
+    Scenario: Being warned when EveryPay rejects the credentials
+        Given EveryPay will reject the credential check
+        When I edit the EveryPay payment method leaving the API secret blank
+        Then I am notified that EveryPay rejected the credentials
+        And the stored credentials are unchanged

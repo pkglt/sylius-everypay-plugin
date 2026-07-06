@@ -1,0 +1,5 @@
+# Estonian — machine-assisted translation, native review welcome.
+pkg_everypay:
+    credentials:
+        rejected: 'EveryPay lükkas need API andmed tagasi — kontrollige API kasutajanime ja salasõna kaupmehe portaalis.'
+        account_not_found: 'EveryPay ei tunne seda töötlemiskontot nende andmetega.'

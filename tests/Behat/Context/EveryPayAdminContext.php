@@ -14,6 +14,7 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\Routing\RouterInterface;
 use Tests\Pkg\SyliusEveryPayPlugin\Behat\SharedStorage;
+use Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock;
 use Tests\Pkg\SyliusEveryPayPlugin\Support\ShopFixtures;
 use Webmozart\Assert\Assert;
 
@@ -25,6 +26,7 @@ use Webmozart\Assert\Assert;
 final class EveryPayAdminContext implements Context
 {
     public function __construct(
+        private readonly EveryPayHttpMock $everyPayApi,
         private readonly ShopFixtures $shopFixtures,
         private readonly SharedStorage $sharedStorage,
         private readonly EntityManagerInterface $entityManager,
@@ -55,6 +57,33 @@ final class EveryPayAdminContext implements Context
         }
     }
 
+    #[Given('EveryPay will accept the credential check')]
+    public function everyPayWillAcceptTheCredentialCheck(): void
+    {
+        $this->everyPayApi->queueJson(['processing_account' => ['name' => 'EUR3D1']]);
+    }
+
+    #[Given('EveryPay will reject the credential check')]
+    public function everyPayWillRejectTheCredentialCheck(): void
+    {
+        $this->everyPayApi->queueJson(['error' => ['code' => 4001, 'message' => 'Authentication failed']], 401);
+    }
+
+    #[Then('I am notified that EveryPay rejected the credentials')]
+    public function iAmNotifiedThatEveryPayRejectedTheCredentials(): void
+    {
+        $content = (string) $this->client()->getResponse()->getContent();
+        Assert::contains($content, 'EveryPay rejected these API credentials');
+    }
+
+    #[Then('the stored credentials are unchanged')]
+    public function theStoredCredentialsAreUnchanged(): void
+    {
+        $config = $this->freshGatewayConfig();
+        Assert::same($config[EveryPayGateway::CONFIG_API_USERNAME] ?? null, 'abcd1234abcd1234');
+        Assert::same($config[EveryPayGateway::CONFIG_API_SECRET] ?? null, 'test-secret');
+    }
+
     #[When('I edit the EveryPay payment method leaving the API secret blank')]
     public function iEditTheEveryPayPaymentMethodLeavingTheApiSecretBlank(): void
     {
@@ -75,6 +104,17 @@ final class EveryPayAdminContext implements Context
     #[Then('the previously stored API secret is kept')]
     public function thePreviouslyStoredApiSecretIsKept(): void
     {
+        $config = $this->freshGatewayConfig();
+
+        Assert::same($config[EveryPayGateway::CONFIG_API_SECRET] ?? null, 'test-secret');
+        Assert::same($config[EveryPayGateway::CONFIG_API_USERNAME] ?? null, 'updated1234abcd0');
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function freshGatewayConfig(): array
+    {
         $method = $this->sharedStorage->get('payment_method', PaymentMethodInterface::class);
         $id = $method->getId();
 
@@ -84,10 +124,8 @@ final class EveryPayAdminContext implements Context
 
         $gatewayConfig = $method->getGatewayConfig();
         Assert::notNull($gatewayConfig);
-        $config = $gatewayConfig->getConfig();
 
-        Assert::same($config[EveryPayGateway::CONFIG_API_SECRET] ?? null, 'test-secret');
-        Assert::same($config[EveryPayGateway::CONFIG_API_USERNAME] ?? null, 'updated1234abcd0');
+        return $gatewayConfig->getConfig();
     }
 
     private function client(): KernelBrowser
