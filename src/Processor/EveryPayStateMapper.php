@@ -23,7 +23,6 @@ final class EveryPayStateMapper
     public const STATE_SETTLED = 'settled';
 
     private const MAP = [
-        'waiting_for_3ds' => PaymentInterface::STATE_PROCESSING,
         'waiting_for_3ds_response' => PaymentInterface::STATE_PROCESSING,
         'waiting_for_sca' => PaymentInterface::STATE_PROCESSING,
         'sent_for_processing' => PaymentInterface::STATE_PROCESSING,

@@ -17,7 +17,7 @@ final class EveryPayStateMapperTest extends TestCase
     public static function stateProvider(): iterable
     {
         yield 'initial is a no-op (payment must stay new/re-payable)' => ['initial', null];
-        yield 'waiting_for_3ds is pending' => ['waiting_for_3ds', PaymentInterface::STATE_PROCESSING];
+        yield 'waiting_for_3ds_response is pending' => ['waiting_for_3ds_response', PaymentInterface::STATE_PROCESSING];
         yield 'waiting_for_sca is pending' => ['waiting_for_sca', PaymentInterface::STATE_PROCESSING];
         yield 'sent_for_processing is pending' => ['sent_for_processing', PaymentInterface::STATE_PROCESSING];
         yield 'settled completes' => ['settled', PaymentInterface::STATE_COMPLETED];

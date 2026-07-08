@@ -86,7 +86,7 @@ status query string.
 | `payment_state` | Meaning | Plugin mapping |
 |---|---|---|
 | `initial` | created, method not chosen yet | no-op (payment stays retryable) |
-| `waiting_for_3ds` / `waiting_for_sca` / `3ds_confirmed` | customer mid-authentication | processing |
+| `waiting_for_3ds_response` / `waiting_for_sca` / `3ds_confirmed` | customer mid-authentication | processing |
 | `sent_for_processing` | confirmed by customer, bank confirmation pending | processing |
 | `settled` | **final success** (card settled / OB passed bank checks) | completed |
 | `authorised` | card authorised, not yet captured (manual-capture accounts only) | authorized |

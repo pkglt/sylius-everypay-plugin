@@ -45,7 +45,7 @@ params are unauthenticated hints, never trusted):
 | EveryPay | Sylius payment | Note |
 |---|---|---|
 | `initial` | — no-op | **deliberate**: the payment must stay `new`, because the shop's pay flow (`PaymentToPayResolver`) only re-enters for `new` payments — a customer who bounced off the hosted page can retry. Capture also does *not* move the payment to processing, for the same reason. |
-| `waiting_for_3ds`, `waiting_for_sca`, `3ds_confirmed`, `sent_for_processing` | processing | |
+| `waiting_for_3ds_response`, `waiting_for_sca`, `3ds_confirmed`, `sent_for_processing` | processing | |
 | `settled` | completed | triggers order-paid and everything hooked to it (invoicing, emails) with zero extra wiring |
 | `authorised` | authorized | only if manual capture is enabled on the processing account |
 | `failed`, `abandoned` | failed | Sylius auto-creates the replacement payment |
