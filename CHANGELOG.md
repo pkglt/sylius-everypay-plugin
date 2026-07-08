@@ -5,6 +5,27 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-07-08
+
+### Added
+
+- Billing and shipping province is sent to EveryPay as `billing_state` /
+  `shipping_state`, when the address carries a province code.
+
+### Changed
+
+- `integration_details` now identifies this plugin: `integration` reports
+  `pkglt/sylius-everypay-plugin` and `version` reports the installed package
+  version (resolved via `Composer\InstalledVersions`), replacing the previous
+  `custom` / hardcoded `2.2` placeholder. This adds a `composer-runtime-api`
+  requirement, satisfied by every Composer 2 install.
+
+### Fixed
+
+- The 3DS mid-authentication state is recognized by its real EveryPay name
+  `waiting_for_3ds_response` (mapped to `processing`); the placeholder
+  `waiting_for_3ds` entry was removed.
+
 ## [0.3.0] - 2026-07-06
 
 ### Changed
@@ -119,6 +140,7 @@ end-to-end against the EveryPay/SEB demo environment.
 
 > v0.1.0 was retracted minutes after publishing (identical functionality).
 
+[0.3.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.0...v0.2.1
