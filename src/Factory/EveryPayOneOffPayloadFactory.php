@@ -132,6 +132,7 @@ final class EveryPayOneOffPayloadFactory
             'country' => $address->getCountryCode(),
             'line1' => $address->getStreet(),
             'postcode' => $address->getPostcode(),
+            'state' => $address->getProvinceCode(),
         ] as $suffix => $value) {
             if (null !== $value && '' !== $value) {
                 $fields[sprintf('%s_%s', $prefix, $suffix)] = $value;

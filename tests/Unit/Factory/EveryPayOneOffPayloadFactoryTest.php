@@ -29,8 +29,8 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
                 orderNumber: '000123',
                 localeCode: 'lt_LT',
                 email: 'client@example.com',
-                billingAddress: $this->address('Kaunas', 'LT', 'Savanorių pr. 1', '44255'),
-                shippingAddress: $this->address('Vilnius', 'LT', 'Gedimino pr. 1', '01103'),
+                billingAddress: $this->address('Kaunas', 'LT', 'Savanorių pr. 1', '44255', 'LT-KU'),
+                shippingAddress: $this->address('Vilnius', 'LT', 'Gedimino pr. 1', '01103', 'LT-VL'),
                 channelName: 'Knygų namai',
             ),
             self::CUSTOMER_URL,
@@ -49,7 +49,9 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame('LT', $payload['billing_country']);
         self::assertSame('Savanorių pr. 1', $payload['billing_line1']);
         self::assertSame('44255', $payload['billing_postcode']);
+        self::assertSame('LT-KU', $payload['billing_state']);
         self::assertSame('Vilnius', $payload['shipping_city']);
+        self::assertSame('LT-VL', $payload['shipping_state']);
 
         $integration = $payload['integration_details'];
         self::assertIsArray($integration);
@@ -82,6 +84,8 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertArrayNotHasKey('email', $payload);
         self::assertArrayNotHasKey('customer_ip', $payload);
         self::assertArrayNotHasKey('shipping_city', $payload);
+        // No province on the address, so no state field is sent.
+        self::assertArrayNotHasKey('billing_state', $payload);
         self::assertSame('Berlin', $payload['billing_city']);
         // No channel stubbed: the description degrades to the order number.
         self::assertSame('order 000009', $payload['payment_description']);
@@ -159,13 +163,14 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         return $payment;
     }
 
-    private function address(string $city, string $countryCode, string $street, string $postcode): AddressInterface
+    private function address(string $city, string $countryCode, string $street, string $postcode, ?string $provinceCode = null): AddressInterface
     {
         $address = $this->createStub(AddressInterface::class);
         $address->method('getCity')->willReturn($city);
         $address->method('getCountryCode')->willReturn($countryCode);
         $address->method('getStreet')->willReturn($street);
         $address->method('getPostcode')->willReturn($postcode);
+        $address->method('getProvinceCode')->willReturn($provinceCode);
 
         return $address;
     }
