@@ -50,10 +50,14 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame('Savanorių pr. 1', $payload['billing_line1']);
         self::assertSame('44255', $payload['billing_postcode']);
         self::assertSame('Vilnius', $payload['shipping_city']);
-        self::assertSame(
-            ['integration' => 'custom', 'software' => 'Sylius', 'version' => '2.2'],
-            $payload['integration_details'],
-        );
+
+        $integration = $payload['integration_details'];
+        self::assertIsArray($integration);
+        self::assertSame('pkglt/sylius-everypay-plugin', $integration['integration']);
+        self::assertSame('Sylius', $integration['software']);
+        // Version comes from package metadata (env-dependent) — assert presence, not value.
+        self::assertIsString($integration['version']);
+        self::assertNotSame('', $integration['version']);
     }
 
     public function testUnknownLocaleFallsBackToEnglishAndNonBalticCountryIsNotPreferred(): void

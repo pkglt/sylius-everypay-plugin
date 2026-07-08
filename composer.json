@@ -28,6 +28,7 @@
     ],
     "require": {
         "php": "^8.2",
+        "composer-runtime-api": "^2.0",
         "sylius/core-bundle": "^2.2",
         "symfony/http-client-contracts": "^3.0"
     },

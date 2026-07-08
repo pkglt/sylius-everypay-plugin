@@ -46,6 +46,9 @@ final class EveryPayGateway
     /** Key inside Payment::getDetails() holding the EveryPay payment snapshot. */
     public const DETAILS_KEY = 'everypay';
 
+    /** Sent as integration_details.integration (EveryPay merchant telemetry). */
+    public const INTEGRATION_NAME = 'pkglt/sylius-everypay-plugin';
+
     /**
      * @param array<array-key, mixed> $paymentDetails
      *

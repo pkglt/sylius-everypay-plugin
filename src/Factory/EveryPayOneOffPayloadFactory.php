@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Pkg\SyliusEveryPayPlugin\Factory;
 
+use Composer\InstalledVersions;
+use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -49,9 +51,9 @@ final class EveryPayOneOffPayloadFactory
             'locale' => $this->resolveLocale($order),
             'payment_description' => $this->paymentDescription($order),
             'integration_details' => [
-                'integration' => 'custom',
+                'integration' => EveryPayGateway::INTEGRATION_NAME,
                 'software' => 'Sylius',
-                'version' => '2.2',
+                'version' => $this->integrationVersion(),
             ],
         ];
 
@@ -78,6 +80,16 @@ final class EveryPayOneOffPayloadFactory
             $this->addressFields('billing', $billingAddress),
             $this->addressFields('shipping', $order->getShippingAddress()),
         );
+    }
+
+    /** Installed plugin version; "dev" when package metadata is unavailable. */
+    private function integrationVersion(): string
+    {
+        if (InstalledVersions::isInstalled(EveryPayGateway::INTEGRATION_NAME)) {
+            return InstalledVersions::getPrettyVersion(EveryPayGateway::INTEGRATION_NAME) ?? 'dev';
+        }
+
+        return 'dev';
     }
 
     /**
