@@ -1,7 +1,7 @@
 {
     "name": "pkglt/sylius-everypay-plugin",
     "type": "sylius-plugin",
-    "description": "EveryPay (LHV Paytech - SEB, LHV, Swedbank in the Baltics) payment gateway for Sylius 2, built on the PaymentRequest abstraction - no Payum.",
+    "description": "EveryPay payment gateway for Sylius 2 - card and Baltic bank-link payments (SEB, LHV, Swedbank / LHV Paytech) via the hosted payment page.",
     "keywords": [
         "sylius",
         "sylius-plugin",
@@ -13,8 +13,10 @@
         "lhv",
         "swedbank",
         "banklink",
+        "open-banking",
         "baltic"
     ],
+    "homepage": "https://github.com/pkglt/sylius-everypay-plugin",
     "license": "MIT",
     "authors": [
         {
@@ -26,6 +28,12 @@
             "homepage": "https://pkg.lt"
         }
     ],
+    "support": {
+        "issues": "https://github.com/pkglt/sylius-everypay-plugin/issues",
+        "source": "https://github.com/pkglt/sylius-everypay-plugin",
+        "docs": "https://github.com/pkglt/sylius-everypay-plugin/blob/main/docs/architecture.md",
+        "security": "https://github.com/pkglt/sylius-everypay-plugin/blob/main/SECURITY.md"
+    },
     "require": {
         "php": "^8.2",
         "composer-runtime-api": "^2.0",
@@ -63,6 +71,7 @@
     },
     "scripts": {
         "analyse": "phpstan analyse",
+        "behat": "behat --strict",
         "check": "ecs check",
         "fix": "ecs check --fix",
         "test": "phpunit"
@@ -78,7 +87,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "1.0-dev"
+            "dev-main": "0.4-dev"
         }
     },
     "conflict": {
