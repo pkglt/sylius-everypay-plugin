@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Documentation, code comments and UI texts use plain ASCII punctuation.
+
 ## [0.3.1] - 2026-07-08
 
 ### Added
@@ -68,15 +74,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   saves the payment method - definitive rejections (bad secret, unknown
   processing account) fail validation, an unreachable EveryPay never blocks
   saving.
-
-### Fixed
-
-- Validation constraints in the `everypay` group (e.g. required credential
-  fields) never actually ran: Sylius pins the gateway-config form subtree to
-  the `sylius` validation group, so the factory-specific groups from
-  `sylius_payment.gateway_config.validation_groups` do not reach it. The
-  gateway configuration form now declares its own groups.
-
 - Behat suite (11 scenarios) on the same test application and scripted
   EveryPay mock as the functional suite: the shop payment lifecycle
   (redirect to the hosted page, settled return, callback settle when the
@@ -86,6 +83,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   refunded twice, a failed refund leaves the payment completed) and admin
   credential management (fields render through the twig hook, a blank
   password field keeps the stored API secret).
+
+### Fixed
+
+- Validation constraints in the `everypay` group (e.g. required credential
+  fields) never actually ran: Sylius pins the gateway-config form subtree to
+  the `sylius` validation group, so the factory-specific groups from
+  `sylius_payment.gateway_config.validation_groups` do not reach it. The
+  gateway configuration form now declares its own groups.
 
 ## [0.1.2] - 2026-07-06
 
@@ -118,7 +123,7 @@ leftover data from the source project.
 - Conflict with `payum/core` < 1.7.3, which declares psr/log 3 support but
   fatals on autoload.
 
-## [0.1.1] - 2026-07-05 [RETRACTED]
+## 0.1.1 - 2026-07-05 [RETRACTED]
 
 First public release, extracted from a production Sylius 2 shop and verified
 end-to-end against the EveryPay/SEB demo environment.
@@ -140,10 +145,10 @@ end-to-end against the EveryPay/SEB demo environment.
 
 > v0.1.0 was retracted minutes after publishing (identical functionality).
 
+[Unreleased]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.3.1...HEAD
 [0.3.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/pkglt/sylius-everypay-plugin/releases/tag/v0.1.2
-[0.1.1]: https://github.com/pkglt/sylius-everypay-plugin/compare/v0.1.2...v0.1.1
