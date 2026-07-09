@@ -4,8 +4,10 @@
 /.gitignore export-ignore
 /AGENTS.md export-ignore
 /CLAUDE.md export-ignore
+/behat.yml.dist export-ignore
 /docs export-ignore
 /ecs.php export-ignore
+/features export-ignore
 /phpstan.neon.dist export-ignore
 /phpunit.xml.dist export-ignore
 /tests export-ignore
