@@ -20,7 +20,8 @@
 
         <env name="APP_ENV" value="test"/>
         <env name="APP_DEBUG" value="0"/>
-        <env name="SYMFONY_DEPRECATIONS_HELPER" value="disabled"/>
+        <!-- Vendor deprecations vary across the 6.4/7.x matrix; the plugin's own must stay at zero. -->
+        <env name="SYMFONY_DEPRECATIONS_HELPER" value="max[self]=0"/>
 
         <server name="APP_ENV" value="test"/>
         <server name="KERNEL_CLASS" value="Sylius\TestApplication\Kernel"/>
