@@ -17,7 +17,7 @@ command on the synchronous `sylius.payment_request.command_bus`.
 |---|---|---|
 | **Capture** | customer completes checkout -> `GET /order/{token}/pay` -> Sylius creates PR(action=capture) -> redirect `/payment-request/pay/{hash}` | `EveryPayCommandProvider` -> `CaptureEveryPayPaymentHandler`: first takes a **pessimistic row lock** on the PR (`$em->refresh($pr, PESSIMISTIC_WRITE)`, transaction supplied by the bus' `doctrine_transaction` middleware) - concurrent `/pay/{hash}` requests (double-click, browser retry) serialize instead of both creating an EveryPay payment for the same `order_reference` and the loser wrongly failing the payment. Then: builds the oneoff payload (`EveryPayOneOffPayloadFactory`), `POST /v4/payments/oneoff`, stores `payment_reference`+`payment_link` in `payment.details['everypay']` and PR responseData, PR -> processing. Then `EveryPayHttpResponseProvider` redirects the customer to `payment_link` (303). API failure: PR + payment -> failed, **no exception** - Sylius falls back to after-pay, the customer gets a failed flash and Sylius auto-creates a fresh `new` payment for retry. |
 | **Status** (customer return) | EveryPay redirects to `customer_url` = `/order/after-pay/{hash}` -> Sylius clones the PR as action=status | `StatusEveryPayPaymentHandler` -> `EveryPayPaymentSynchronizer` (below). An API failure is swallowed (PR -> failed): the payment stays processing, callbacks settle it later. |
-| **Notify** (server callback) | EveryPay hits `/payment-methods/{code}?payment_reference=...&event_name=...` (static URL configured in the merchant portal) | Sylius `PaymentMethodNotifyAction` -> `EveryPayNotifyPaymentProvider` resolves the Payment (`details LIKE '%<64-char hex ref>%'`, scoped to the method; malformed -> 400, unknown -> 404, both side-effect-free) -> PR(action=notify) -> `NotifyEveryPayPaymentHandler` -> synchronizer. An API failure **propagates** -> non-2xx response -> EveryPay redelivers (6 retries / 72 h). Success -> 204. |
+| **Notify** (server callback) | EveryPay hits `/payment-methods/{code}?payment_reference=...&event_name=...` (static URL configured in the merchant portal) | Sylius `PaymentMethodNotifyAction` -> `EveryPayNotifyPaymentProvider` resolves the Payment (`details LIKE '%<hex payment reference>%'`, scoped to the method; malformed -> 400, unknown -> 404, both side-effect-free) -> PR(action=notify) -> `NotifyEveryPayPaymentHandler` -> synchronizer. An API failure **propagates** -> non-2xx response -> EveryPay redelivers (6 retries / 72 h). Success -> 204. |
 | **Refund** (admin) | Core admin Refund button applies the `sylius_payment` `refund` transition -> `workflow.sylius_payment.completed.refund` event | `RefundEveryPayPaymentListener` (guards: core payment, everypay factory, not synchronizer-initiated) wraps *create PR(refund) + announce* in an explicit DBAL transaction. `RefundEveryPayPaymentHandler` calls `POST /v4/payments/refund` (full amount). Failure -> rollback + `UpdateHandlingException('everypay_refund_failed')` -> the resource controller shows the error flash and **never flushes** - the DB keeps the payment `completed`. |
 
 ## EveryPayPaymentSynchronizer (the heart)
@@ -57,42 +57,52 @@ params are unauthenticated hints, never trusted):
 
 ```
 src/
-├── PkgSyliusEveryPayPlugin.php             bundle class (SyliusPluginTrait)
-├── DependencyInjection/                    loads config/services.php
-├── EveryPayGateway.php                     factory name, config keys, base URLs,
-│                                           details helpers (detailsFrom / paymentReferenceFrom)
-├── Client/
-│   ├── EveryPayApiClient.php               oneoff / status / refund; Basic auth, nonce,
-│   │                                       ISO-8601 timestamp, error -> EveryPayApiException
-│   ├── EveryPayCredentials.php             DTO from (decrypted) gateway config; env -> base URL
-│   └── EveryPayApiException.php
-├── Command/{Capture,Status,Notify,Refund}EveryPayPayment.php    hash-aware bus commands
-├── CommandProvider/EveryPayCommandProvider.php                  action -> command (one class)
-├── CommandHandler/{Capture,Status,Notify,Refund}EveryPayPaymentHandler.php
-├── Factory/EveryPayOneOffPayloadFactory.php   amount cents->decimal, order_reference
-│                                              "{orderNumber}-{paymentId}" (unique per attempt),
-│                                              locale mapping (lt_LT->lt, fallback en),
-│                                              preferred_country EE/LV/LT, billing/shipping,
-│                                              customer_ip (order -> request fallback)
-├── Fixture/EveryPayPaymentMethodExampleFactory.php  forces use_payum=false in fixtures
-├── Processor/
-│   ├── EveryPayStateMapper.php             pure state table (unit-tested)
-│   └── EveryPayPaymentSynchronizer.php     API truth -> state machine, idempotent
-├── Provider/
-│   ├── EveryPayHttpResponseProvider.php    redirect to payment_link (guards: capture action,
-│   │                                       PR processing, payment new/processing)
-│   └── EveryPayNotifyPaymentProvider.php   callback -> Payment resolution
-├── Form/EveryPayGatewayConfigurationType.php   admin config form (4 fields)
-└── EventListener/RefundEveryPayPaymentListener.php  transactional refund bridge
+|-- PkgSyliusEveryPayPlugin.php             bundle class (SyliusPluginTrait)
+|-- DependencyInjection/                    loads config/services.php; loads the sylius_shop
+|                                           integration when ShopBundle is registered
+|-- EveryPayGateway.php                     factory name, config keys, base URLs,
+|                                           details helpers (detailsFrom / paymentReferenceFrom)
+|-- Client/
+|   |-- EveryPayApiClient.php               oneoff / status / refund / processing account;
+|   |                                       Basic auth, nonce, ISO-8601 timestamp,
+|   |                                       error -> EveryPayApiException
+|   |-- EveryPayCredentials.php             DTO from (decrypted) gateway config; env -> base URL
+|   `-- EveryPayApiException.php
+|-- Command/{Capture,Status,Notify,Refund}EveryPayPayment.php    hash-aware bus commands
+|-- CommandProvider/EveryPayCommandProvider.php                  action -> command (one class)
+|-- CommandHandler/{Capture,Status,Notify,Refund}EveryPayPaymentHandler.php
+|-- Factory/EveryPayOneOffPayloadFactory.php   amount cents->decimal, order_reference
+|                                              "{orderNumber}-{paymentId}" (unique per attempt),
+|                                              locale mapping (lt_LT->lt, fallback en),
+|                                              preferred_country EE/LV/LT, billing/shipping,
+|                                              customer_ip (order -> request fallback)
+|-- Fixture/EveryPayPaymentMethodExampleFactory.php  forces use_payum=false in fixtures
+|-- Processor/
+|   |-- EveryPayStateMapper.php             pure state table (unit-tested)
+|   `-- EveryPayPaymentSynchronizer.php     API truth -> state machine, idempotent
+|-- Provider/
+|   |-- AfterPayUrlProviderInterface.php    customer_url seam (payload key after_pay_url)
+|   |-- PayloadAfterPayUrlProvider.php      headless default: URL from the payload only
+|   |-- SyliusShopAfterPayUrlProvider.php   payload first, shop after-pay route fallback
+|   |                                       (wired only when SyliusShopBundle is present)
+|   |-- EveryPayHttpResponseProvider.php    redirect to payment_link or render the method
+|   |                                       grid (guards: capture action, PR processing,
+|   |                                       payment new/processing)
+|   `-- EveryPayNotifyPaymentProvider.php   callback -> Payment resolution
+|-- Form/EveryPayGatewayConfigurationType.php   admin config form (5 fields)
+|-- Validator/Constraints/ValidEveryPayCredentials{,Validator}.php  credential check on save
+`-- EventListener/RefundEveryPayPaymentListener.php  transactional refund bridge
 
 config/services.php                         autowire/autoconfigure prototype over src/
+config/services/integrations/sylius_shop.php  shop-only after-pay wiring
 config/config.yaml                          imports config/app/*.yaml (host app imports this)
 config/app/sylius_payment.yaml              gateway validation groups
 config/app/twig_hooks.yaml                  admin form hooks (required - see gotchas)
 templates/admin/payment_method/...          gateway credential fields partial
-translations/{messages,flashes}.{en,lt,et,lv}.yaml
-tests/                                      unit tests (client, mapper, payload factory,
-                                            synchronizer, command provider, capture handler)
+templates/shop/method_grid.html.twig        in-shop payment method grid
+translations/{messages,flashes,validators}.{en,lt,et,lv}.yaml
+tests/                                      unit, functional and Behat suites (layout in
+                                            AGENTS.md)
 ```
 
 ## Wiring
