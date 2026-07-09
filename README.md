@@ -1,6 +1,8 @@
 # Sylius EveryPay Plugin
 
 [![Build](https://github.com/pkglt/sylius-everypay-plugin/actions/workflows/build.yaml/badge.svg)](https://github.com/pkglt/sylius-everypay-plugin/actions/workflows/build.yaml)
+[![Version](https://img.shields.io/packagist/v/pkglt/sylius-everypay-plugin.svg)](https://packagist.org/packages/pkglt/sylius-everypay-plugin)
+[![Downloads](https://img.shields.io/packagist/dt/pkglt/sylius-everypay-plugin.svg)](https://packagist.org/packages/pkglt/sylius-everypay-plugin)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 [EveryPay](https://every-pay.com) payment gateway for **Sylius 2.x**. EveryPay is the
@@ -9,8 +11,9 @@ Swedbank** - one integration gives you card payments, Open Banking bank links
 (all major Baltic banks), Apple Pay and Google Pay through EveryPay's hosted
 payment page.
 
-Built on the modern Sylius **PaymentRequest** abstraction (`sylius/payment-bundle`,
-the same architecture as the official Stripe plugin). **No Payum anywhere.**
+Built on the modern Sylius **PaymentRequest** pipeline (`sylius/payment-bundle`) -
+no legacy Payum. The architecture follows Sylius' official Stripe and PayPal
+plugins; see [docs/architecture.md](docs/architecture.md).
 
 EveryPay themselves offer no official Sylius integration and none is planned
 (confirmed by EveryPay support, September 2025) - this community plugin fills
@@ -43,8 +46,8 @@ that gap.
 
 | | Version |
 |---|---|
-| PHP | ^8.2 |
-| Sylius | ^2.2 |
+| PHP | 8.2+ |
+| Sylius | 2.2+ |
 
 Works with the standard Sylius shop frontend out of the box, and with
 headless/API-only stores (see [Headless checkouts](#headless--api-checkouts)).
@@ -201,9 +204,8 @@ issues privately per [SECURITY.md](SECURITY.md). Changes are tracked in the
 
 MIT - see [LICENSE](LICENSE).
 
-Extracted from the production integration of a Lithuanian Sylius 2 shop, where
-it has been verified end-to-end against the EveryPay/SEB demo environment
-(full pay, refund, callback and failure paths).
+Verified end-to-end against the EveryPay/SEB demo environment (full pay,
+refund, callback and failure paths).
 
 *EveryPay is a trademark of its respective owner (EveryPay AS / LHV Paytech).
 This is an independent community integration, not affiliated with or endorsed
