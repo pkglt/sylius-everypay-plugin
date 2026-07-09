@@ -117,6 +117,27 @@ Notes:
 (manual-capture accounts), `/v4/shops`, `/v4/processing_accounts`,
 `/v4/mobile_payments/card_details` (in-app payments).
 
+## Payment Elements (embedded checkout)
+
+EveryPay also has an embedded web checkout — the **Payment Elements** JS SDK
+its own platform plugins (WooCommerce 2.x, Magento, PrestaShop) mount in-page:
+`{base host}/payment_elements/everypay-sdk-v1-0-0.umd.js` (global `EveryPay`;
+`secureElements(…)` → `build({element: 'payment'})` → `mount()` / `submit()` /
+`confirm()`). It rides on a oneoff created with `mobile_payment: true`, whose
+response adds a `mobile_access_token` consumed by the element's hosted iframe —
+the card form itself stays on EveryPay's servers, and EveryPay's
+[PCI DSS SAQ article](https://support.every-pay.com/en/articles/11163626-pci-dss-self-assessment-questionnaires)
+classifies the "Payment Elements" integration type as **SAQ A** (their
+"SDK(s) → SAQ A-EP" row refers to the mobile app SDKs).
+
+Status 2026-07: **no public integration documentation exists** — the help
+center's Custom Integration / SDKs / Plugin Integration collections contain
+none (the SDKs collection is mobile-app only) — and the SDK contents changed
+under the same `v1-0-0` URL within days. Do not build on it before
+support@every-pay.com confirms availability for custom integrations; until
+then the documented custom-web patterns are the hosted redirect and the
+`method_source` method selection this plugin already implements.
+
 ## Merchant portal setup checklist
 
 1. Get demo credentials first; portal → *Merchant settings → General*: note

@@ -184,6 +184,11 @@ This repository is set up for AI-agent-assisted development — see
 - Partial refunds via `sylius/refund-plugin` integration
   (the API client already accepts arbitrary amounts)
 - Tokenized/CIT payments (`request_token`)
+- Embedded in-shop checkout via the EveryPay **Payment Elements** JS SDK — the
+  element EveryPay's own platform plugins mount in-page (`mobile_payment`
+  one-offs, hosted iframe card form, SAQ A per EveryPay's PCI classification).
+  Blocked until EveryPay confirms/documents the SDK for custom integrations —
+  see [docs/everypay-api.md](docs/everypay-api.md#payment-elements-embedded-checkout)
 
 ## Contributing & security
 

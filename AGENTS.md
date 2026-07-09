@@ -201,4 +201,6 @@ source of truth.
 
 Partial refunds via `sylius/refund-plugin` (adoption path documented in
 `docs/architecture.md` — the workflow listener must be guarded when adopted),
-tokenized/CIT payments, per-method direct payment links.
+tokenized/CIT payments, and embedded in-shop checkout via the EveryPay
+Payment Elements JS SDK (blocked on EveryPay confirming/documenting it for
+custom integrations — see docs/everypay-api.md).
