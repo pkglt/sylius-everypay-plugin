@@ -20,7 +20,7 @@ final class EveryPayGatewayTest extends TestCase
                 'logo_url' => 'https://igw-demo.every-pay.com/assets/swedbank.svg',
                 'tokenization_supported' => false,
             ],
-            // No per-method link — cannot be shown as a direct button.
+            // No per-method link - cannot be shown as a direct button.
             ['source' => 'card', 'display_name' => 'VISA/MasterCard', 'payment_link' => null, 'logo_url' => 'x'],
             // Malformed entries are skipped defensively.
             'not-an-array',

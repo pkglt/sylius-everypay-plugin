@@ -70,7 +70,7 @@ final class EveryPayPaymentSynchronizerTest extends TestCase
 
     public function testUnreachableTargetStateIsNeverAppliedSilently(): void
     {
-        // failed → completed has no transition in the sylius_payment graph;
+        // failed -> completed has no transition in the sylius_payment graph;
         // the synchronizer must not apply anything (and warns for reconciliation)
         $payment = $this->everyPayPayment(PaymentInterface::STATE_FAILED);
         $synchronizer = $this->synchronizer(['payment_state' => 'settled']);

@@ -24,7 +24,7 @@ use Sylius\Component\Resource\Factory\FactoryInterface;
 
 /**
  * Programmatic fixtures shared by the phpunit functional suite and the Behat
- * contexts — one place that knows how to stand up a channel, an EveryPay
+ * contexts - one place that knows how to stand up a channel, an EveryPay
  * payment method and an order awaiting payment inside the test application.
  */
 final class ShopFixtures

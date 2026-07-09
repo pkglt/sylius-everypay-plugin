@@ -108,7 +108,7 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
 
         $handler(new CaptureEveryPayPayment('hash'));
 
-        // EUR3D1 hints EUR, the payment is USD — warn, but never block.
+        // EUR3D1 hints EUR, the payment is USD - warn, but never block.
         $warnings = array_filter($this->loggedRecords, static fn (array $r): bool => 'warning' === $r[0]);
         self::assertCount(1, $warnings);
         self::assertStringContainsString('different currency', (string) array_values($warnings)[0][1]);

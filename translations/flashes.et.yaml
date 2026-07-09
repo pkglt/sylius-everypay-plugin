@@ -1,4 +1,4 @@
-# Estonian — machine-assisted translation, native review welcome.
+# Estonian - machine-assisted translation, native review welcome.
 sylius:
     payment:
-        everypay_refund_failed: 'EveryPay tagasimakse ebaõnnestus — makse olek jäi muutmata. Proovige uuesti või tehke tagasimakse EveryPay kaupmehe portaalis.'
+        everypay_refund_failed: 'EveryPay tagasimakse ebaõnnestus - makse olek jäi muutmata. Proovige uuesti või tehke tagasimakse EveryPay kaupmehe portaalis.'

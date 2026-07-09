@@ -24,7 +24,7 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
  * follow up with the actual refund API call via a refund payment request.
  *
  * The repository add() flushes mid-transition, which would persist the
- * `refunded` state before EveryPay confirmed anything — so everything runs
+ * `refunded` state before EveryPay confirmed anything - so everything runs
  * inside an explicit transaction, and failures are rethrown as
  * UpdateHandlingException: the resource controller catches it, shows an
  * error flash and never flushes, leaving the payment `completed` in the DB.
@@ -82,7 +82,7 @@ final class RefundEveryPayPaymentListener
         } catch (\Throwable $e) {
             $connection->rollBack();
 
-            $this->logger->error('EveryPay refund failed — payment left as completed.', [
+            $this->logger->error('EveryPay refund failed - payment left as completed.', [
                 'payment_id' => $payment->getId(),
                 'exception' => $e,
             ]);

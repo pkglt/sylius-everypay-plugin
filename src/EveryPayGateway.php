@@ -8,7 +8,7 @@ use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 
 /**
- * EveryPay (every-pay.com) gateway constants — factory name, gateway config
+ * EveryPay (every-pay.com) gateway constants - factory name, gateway config
  * keys (admin-entered, encrypted at rest in sylius_gateway_config) and the
  * key under which EveryPay data is kept in sylius_payment.details.
  *
@@ -122,7 +122,7 @@ final class EveryPayGateway
 
     /**
      * Groups grid options by country for display: the customer's (billing)
-     * country first, then the international methods (card, Revolut — no
+     * country first, then the international methods (card, Revolut - no
      * country_code), then the remaining countries in first-seen order.
      * Order inside each group is EveryPay's.
      *

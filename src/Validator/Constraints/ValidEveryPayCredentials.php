@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraint;
 /**
  * Verifies admin-entered gateway credentials against the EveryPay API when
  * the payment method is saved. Only definitive rejections (401/403, unknown
- * processing account) fail validation — network problems or EveryPay outages
+ * processing account) fail validation - network problems or EveryPay outages
  * never block saving.
  */
 final class ValidEveryPayCredentials extends Constraint

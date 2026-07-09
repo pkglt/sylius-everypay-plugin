@@ -55,7 +55,7 @@ final readonly class EveryPayCredentials
 
     /**
      * EveryPay processing accounts are conventionally named after their
-     * currency (EUR1, EUR3D1, ...) — a best-effort hint used only for a
+     * currency (EUR1, EUR3D1, ...) - a best-effort hint used only for a
      * logged warning, never to block a payment.
      */
     public function currencyHint(): ?string

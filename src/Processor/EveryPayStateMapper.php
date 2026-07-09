@@ -11,7 +11,7 @@ use Sylius\Component\Payment\Model\PaymentInterface;
  * (graph `sylius_payment`). See the state table in
  * docs/everypay-api.md.
  *
- * `charged_back` is intentionally unmapped — chargebacks are handled manually
+ * `charged_back` is intentionally unmapped - chargebacks are handled manually
  * from the EveryPay merchant portal.
  *
  * `initial` is also unmapped: the Sylius payment must stay `new` while the

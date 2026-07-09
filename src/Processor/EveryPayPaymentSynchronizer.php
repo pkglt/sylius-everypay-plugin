@@ -15,7 +15,7 @@ use Sylius\Component\Payment\PaymentTransitions;
 /**
  * Fetches the authoritative payment state from the EveryPay API and moves the
  * Sylius payment through its state machine accordingly. Used by both the
- * customer-return (status) and the server callback (notify) handlers — the
+ * customer-return (status) and the server callback (notify) handlers - the
  * two arrive in any order and any number of times, so this is idempotent:
  * when the payment is already in the target state nothing happens.
  */
@@ -23,7 +23,7 @@ final class EveryPayPaymentSynchronizer
 {
     /**
      * Workflow context marker set on every transition this synchronizer
-     * applies. RefundEveryPayPaymentListener skips events carrying it — a
+     * applies. RefundEveryPayPaymentListener skips events carrying it - a
      * refund initiated in the EveryPay portal arrives here as a `refunded`
      * callback and must not trigger a second refund API call.
      */
@@ -43,7 +43,7 @@ final class EveryPayPaymentSynchronizer
         $paymentReference = EveryPayGateway::paymentReferenceFrom($details);
 
         if (null === $paymentReference) {
-            // Capture never reached EveryPay (API error before redirect) —
+            // Capture never reached EveryPay (API error before redirect) -
             // fail the payment so Sylius offers the customer a new attempt.
             $this->applyTargetState($payment, PaymentInterface::STATE_FAILED);
 
@@ -71,7 +71,7 @@ final class EveryPayPaymentSynchronizer
         if (null !== $targetState) {
             $this->applyTargetState($payment, $targetState);
         } elseif ('charged_back' === $remoteState) {
-            $this->logger->warning('EveryPay payment was charged back — handle manually in the merchant portal.', [
+            $this->logger->warning('EveryPay payment was charged back - handle manually in the merchant portal.', [
                 'payment_id' => $payment->getId(),
                 'payment_reference' => $paymentReference,
             ]);
@@ -87,9 +87,9 @@ final class EveryPayPaymentSynchronizer
         $transition = $this->stateMachine->getTransitionToState($payment, PaymentTransitions::GRAPH, $targetState);
         if (null === $transition) {
             // E.g. a payment stuck in failed/cancelled while EveryPay reports
-            // settled/refunded — money moved but Sylius cannot follow. Make it
+            // settled/refunded - money moved but Sylius cannot follow. Make it
             // loud so an operator reconciles manually instead of it vanishing.
-            $this->logger->warning('EveryPay reports a state Sylius cannot transition to — reconcile manually.', [
+            $this->logger->warning('EveryPay reports a state Sylius cannot transition to - reconcile manually.', [
                 'payment_id' => $payment->getId(),
                 'current_state' => $payment->getState(),
                 'target_state' => $targetState,

@@ -94,7 +94,7 @@ final class EveryPayOneOffPayloadFactory
 
     /**
      * Bank-statement text for Open Banking payments: "{channel} order {number}",
-     * reduced to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] — the
+     * reduced to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] - the
      * SEPA set, so diacritics are stripped) and capped at 65 characters.
      */
     private function paymentDescription(OrderInterface $order): string

@@ -1,11 +1,11 @@
 imports:
-    # The plugin's real application-level config — the same file a host app
+    # The plugin's real application-level config - the same file a host app
     # imports (gateway validation groups + admin form twig hooks).
     - { resource: '@PkgSyliusEveryPayPlugin/config/config.yaml' }
     - { resource: 'services_test.yaml' }
     - { resource: 'doctrine_lazy_objects.php' }
 
-# No compiled frontend assets exist in the test application — tolerate missing
+# No compiled frontend assets exist in the test application - tolerate missing
 # Encore entrypoints so admin/shop pages render server-side.
 webpack_encore:
     strict_mode: false

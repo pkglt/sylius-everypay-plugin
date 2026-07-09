@@ -1,5 +1,5 @@
-# Latvian — machine-assisted translation, native review welcome.
+# Latvian - machine-assisted translation, native review welcome.
 pkg_everypay:
     credentials:
-        rejected: 'EveryPay noraidīja šos API datus — pārbaudiet API lietotājvārdu un paroli tirgotāja portālā.'
+        rejected: 'EveryPay noraidīja šos API datus - pārbaudiet API lietotājvārdu un paroli tirgotāja portālā.'
         account_not_found: 'EveryPay neatpazīst šo apstrādes kontu ar šiem datiem.'

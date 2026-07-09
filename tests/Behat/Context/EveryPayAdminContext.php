@@ -93,7 +93,7 @@ final class EveryPayAdminContext implements Context
         Assert::true($this->client()->getResponse()->isSuccessful());
 
         $form = $crawler->selectButton('Update')->form();
-        // A password widget never re-renders its value — the browser submits
+        // A password widget never re-renders its value - the browser submits
         // an empty string exactly like an untouched admin form does.
         $form['sylius_admin_payment_method[gatewayConfig][config][api_secret]'] = '';
         $form['sylius_admin_payment_method[gatewayConfig][config][api_username]'] = 'updated1234abcd0';

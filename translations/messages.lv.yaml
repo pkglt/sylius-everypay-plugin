@@ -1,4 +1,4 @@
-# Latvian — machine-assisted translation, native review welcome.
+# Latvian - machine-assisted translation, native review welcome.
 pkg_everypay:
     ui:
         gateway_label: 'EveryPay (karšu un banku maksājumi)'
@@ -6,7 +6,7 @@ pkg_everypay:
         api_secret: 'API parole (secret)'
         api_secret_help: 'Rediģējot atstājiet tukšu, lai paturētu saglabāto paroli.'
         account_name: 'Apstrādes konts (processing account)'
-        account_name_help: 'Piem., EUR3D1 — atrodams EveryPay tirgotāja portālā; nosaka valūtu un pieejamos maksājumu veidus.'
+        account_name_help: 'Piem., EUR3D1 - atrodams EveryPay tirgotāja portālā; nosaka valūtu un pieejamos maksājumu veidus.'
         environment: 'Vide'
         environment_demo: 'Demo (testa)'
         environment_live: 'Live (produkcija)'

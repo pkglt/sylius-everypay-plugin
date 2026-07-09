@@ -18,7 +18,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Resolves the Sylius payment targeted by an EveryPay callback hitting
- * /payment-methods/{code}?payment_reference=…&event_name=… — the reference
+ * /payment-methods/{code}?payment_reference=...&event_name=... - the reference
  * was stored in payment details when the one-off payment was created.
  * The callback itself is never trusted; the notify handler re-reads the
  * state from the EveryPay API.

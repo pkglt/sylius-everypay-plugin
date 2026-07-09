@@ -1,5 +1,5 @@
 services:
-    # Scripted EveryPay API responses — tests fetch this public service from the
+    # Scripted EveryPay API responses - tests fetch this public service from the
     # booted container and queue MockResponse objects onto it.
     Tests\Pkg\SyliusEveryPayPlugin\Functional\Support\EveryPayHttpMock:
         public: true

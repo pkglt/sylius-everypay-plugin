@@ -14,8 +14,8 @@ use Symfony\Component\Routing\RouterInterface;
 
 /**
  * Dispatches the capture command on the real sylius.payment_request.command_bus
- * — through the doctrine transaction middleware, the pessimistic lock and the
- * after-pay URL provider — against the mocked EveryPay API.
+ * - through the doctrine transaction middleware, the pessimistic lock and the
+ * after-pay URL provider - against the mocked EveryPay API.
  */
 final class CapturePaymentRequestTest extends FunctionalTestCase
 {

@@ -48,14 +48,14 @@ final readonly class CaptureEveryPayPaymentHandler
 
         // Serialize concurrent /pay/{hash} requests (double-click, browser
         // retry): FOR UPDATE blocks a competing capture until the winner's
-        // transaction commits, and refresh re-reads the state it advanced —
+        // transaction commits, and refresh re-reads the state it advanced -
         // otherwise both would create an EveryPay payment for the same
         // order_reference and the loser would wrongly fail this payment.
         // The active transaction comes from the bus' doctrine_transaction
         // middleware.
         $this->entityManager->refresh($paymentRequest, LockMode::PESSIMISTIC_WRITE);
 
-        // Reloading /pay/{hash} re-dispatches capture — do not create a
+        // Reloading /pay/{hash} re-dispatches capture - do not create a
         // second EveryPay payment for the same attempt.
         if (PaymentRequestInterface::STATE_PROCESSING === $paymentRequest->getState()) {
             return;
@@ -72,7 +72,7 @@ final readonly class CaptureEveryPayPaymentHandler
         // diagnosable instead of a bare failed payment.
         $currencyHint = $credentials->currencyHint();
         if (null !== $currencyHint && $currencyHint !== $payment->getCurrencyCode()) {
-            $this->logger->warning('EveryPay processing account suggests a different currency than the payment — EveryPay will likely reject it.', [
+            $this->logger->warning('EveryPay processing account suggests a different currency than the payment - EveryPay will likely reject it.', [
                 'payment_id' => $payment->getId(),
                 'account_name' => $credentials->accountName,
                 'account_currency_hint' => $currencyHint,

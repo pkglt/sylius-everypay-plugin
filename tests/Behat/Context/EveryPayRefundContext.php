@@ -24,7 +24,7 @@ use Webmozart\Assert\Assert;
 
 /**
  * Refund flows: the admin-initiated refund (the sylius_payment refund
- * transition — exactly what the admin Refund button applies) and the
+ * transition - exactly what the admin Refund button applies) and the
  * portal-initiated refund arriving as a callback, which must never trigger
  * a second refund API call.
  */
@@ -167,7 +167,7 @@ final class EveryPayRefundContext implements Context
     }
 
     /**
-     * Reads the payment state as persisted — after a rolled-back refund the
+     * Reads the payment state as persisted - after a rolled-back refund the
      * in-memory entity may carry a state that never reached the database.
      */
     private function freshPayment(): PaymentInterface

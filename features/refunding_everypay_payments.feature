@@ -1,7 +1,7 @@
 Feature: Refunding EveryPay payments
     In order to reimburse customers safely
     As an Administrator
-    I want refunds to reach EveryPay exactly once — no matter where they start
+    I want refunds to reach EveryPay exactly once - no matter where they start
 
     Background:
         Given the store operates a channel with EveryPay payments

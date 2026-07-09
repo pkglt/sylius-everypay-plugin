@@ -4,7 +4,7 @@
     {{ form_row(form.api_username) }}
 </div>
 <div class="col-12 col-md-6">
-    {# A password widget never renders its value — hint that one is stored.
+    {# A password widget never renders its value - hint that one is stored.
        Render-time attr replaces the type's attr wholesale, so autocomplete
        must be repeated here. #}
     {{ form_row(form.api_secret, form.api_secret.vars.data is not empty ? { attr: { placeholder: '••••••••••••••••', autocomplete: 'one-time-code' } } : {}) }}

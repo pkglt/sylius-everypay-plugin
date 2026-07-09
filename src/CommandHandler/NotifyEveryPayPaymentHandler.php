@@ -14,7 +14,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 /**
  * Runs for EveryPay server-to-server callbacks
- * (POST/GET /payment-methods/{code}?payment_reference=…&event_name=…).
+ * (POST/GET /payment-methods/{code}?payment_reference=...&event_name=...).
  * Callbacks are unauthenticated, so the synchronizer re-reads the state from
  * the EveryPay API instead of trusting the request. An API failure is left
  * to bubble up: the resulting non-2xx response makes EveryPay redeliver the

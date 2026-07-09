@@ -16,7 +16,7 @@ return static function (ContainerConfigurator $configurator): void {
     // All cross-cutting wiring lives in attributes on the classes themselves
     // (#[AsMessageHandler], #[AsEventListener], #[AsGatewayConfigurationType],
     // #[AsNotifyPaymentProvider], #[AsDecorator], #[AutoconfigureTag],
-    // #[Autowire]) — the prototype below only registers them as autowired,
+    // #[Autowire]) - the prototype below only registers them as autowired,
     // autoconfigured services. Excluded: the bundle/DI plumbing, plain value
     // objects, the command DTOs (messages rather than services) and the
     // shop-bundle integration, which the extension loads conditionally.
@@ -32,7 +32,7 @@ return static function (ContainerConfigurator $configurator): void {
             __DIR__ . '/../src/Validator/Constraints/ValidEveryPayCredentials.php',
         ]);
 
-    // Headless default — config/services/integrations/sylius_shop.php
+    // Headless default - config/services/integrations/sylius_shop.php
     // re-aliases this to the shop-aware provider when SyliusShopBundle exists.
     $services->alias(AfterPayUrlProviderInterface::class, PayloadAfterPayUrlProvider::class);
 };

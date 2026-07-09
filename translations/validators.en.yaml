@@ -1,4 +1,4 @@
 pkg_everypay:
     credentials:
-        rejected: 'EveryPay rejected these API credentials — check the API username and secret in the merchant portal.'
+        rejected: 'EveryPay rejected these API credentials - check the API username and secret in the merchant portal.'
         account_not_found: 'EveryPay does not know this processing account for these credentials.'

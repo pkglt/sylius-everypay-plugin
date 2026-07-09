@@ -5,7 +5,7 @@ pkg_everypay:
         api_secret: 'API slaptažodis (secret)'
         api_secret_help: 'Redaguojant palikite tuščią, jei nenorite keisti išsaugoto slaptažodžio.'
         account_name: 'Apdorojimo sąskaita (processing account)'
-        account_name_help: 'Pvz. EUR3D1 — nurodyta EveryPay pardavėjo portale; lemia valiutą ir galimus mokėjimo būdus.'
+        account_name_help: 'Pvz. EUR3D1 - nurodyta EveryPay pardavėjo portale; lemia valiutą ir galimus mokėjimo būdus.'
         environment: 'Aplinka'
         environment_demo: 'Demo (testinė)'
         environment_live: 'Gyva (produkcinė)'

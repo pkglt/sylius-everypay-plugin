@@ -36,7 +36,7 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
             self::assertStringContainsString(
                 sprintf('[gatewayConfig][config][%s]', $field),
                 $content,
-                sprintf('The "%s" gateway field is missing — is the gateway_configuration.everypay twig hook loaded?', $field),
+                sprintf('The "%s" gateway field is missing - is the gateway_configuration.everypay twig hook loaded?', $field),
             );
         }
 
@@ -46,7 +46,7 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
 
         // Browsers must neither save/autofill the credential pair (an
         // autofilled secret would silently overwrite the stored one) nor
-        // offer to GENERATE a password — the secret is issued by EveryPay.
+        // offer to GENERATE a password - the secret is issued by EveryPay.
         self::assertStringContainsString('autocomplete="one-time-code"', $content);
         self::assertStringContainsString('autocomplete="off"', $content);
     }

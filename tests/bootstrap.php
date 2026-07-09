@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-// A booted Sylius container needs more than the default 128M — this bootstrap
+// A booted Sylius container needs more than the default 128M - this bootstrap
 // serves both phpunit and behat, so raise it once here.
 ini_set('memory_limit', '1G');
 
 // The test application configures asset packages with json_manifest_path and
-// Encore builds, but no frontend build ever runs here — seed empty manifests
+// Encore builds, but no frontend build ever runs here - seed empty manifests
 // so server-side page rendering does not trip over missing files.
 $publicBuildDir = __DIR__ . '/../vendor/sylius/test-application/public/build';
 foreach (['default', 'shop', 'admin', 'app/admin', 'app/shop'] as $build) {

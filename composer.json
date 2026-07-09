@@ -1,7 +1,7 @@
 {
     "name": "pkglt/sylius-everypay-plugin",
     "type": "sylius-plugin",
-    "description": "EveryPay (LHV Paytech — SEB, LHV, Swedbank in the Baltics) payment gateway for Sylius 2, built on the PaymentRequest abstraction — no Payum.",
+    "description": "EveryPay (LHV Paytech - SEB, LHV, Swedbank in the Baltics) payment gateway for Sylius 2, built on the PaymentRequest abstraction - no Payum.",
     "keywords": [
         "sylius",
         "sylius-plugin",

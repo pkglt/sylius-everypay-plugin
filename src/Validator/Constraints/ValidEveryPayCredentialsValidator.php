@@ -56,7 +56,7 @@ final class ValidEveryPayCredentialsValidator extends ConstraintValidator
                 return;
             }
 
-            // Transport failures and server errors never block saving —
+            // Transport failures and server errors never block saving -
             // admin-entered data is trusted when it cannot be verified.
         }
     }

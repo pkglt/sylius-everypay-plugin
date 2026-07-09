@@ -1,5 +1,5 @@
 default:
-    # E_ALL without E_DEPRECATED/E_USER_DEPRECATED — vendor deprecations on
+    # E_ALL without E_DEPRECATED/E_USER_DEPRECATED - vendor deprecations on
     # newer PHP versions must not fail scenario steps.
     calls:
         error_reporting: 8191

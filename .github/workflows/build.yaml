@@ -15,7 +15,7 @@ jobs:
             matrix:
                 php: ["8.2", "8.3", "8.4"]
                 # lowest resolves the Symfony 6.4 line, highest the current
-                # Symfony/Sylius releases — both lines stay covered.
+                # Symfony/Sylius releases - both lines stay covered.
                 dependencies: [highest, lowest]
 
         steps:

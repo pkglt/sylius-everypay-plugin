@@ -1,4 +1,4 @@
-# Latvian — machine-assisted translation, native review welcome.
+# Latvian - machine-assisted translation, native review welcome.
 sylius:
     payment:
-        everypay_refund_failed: 'EveryPay atmaksa neizdevās — maksājuma statuss netika mainīts. Mēģiniet vēlreiz vai veiciet atmaksu EveryPay tirgotāja portālā.'
+        everypay_refund_failed: 'EveryPay atmaksa neizdevās - maksājuma statuss netika mainīts. Mēģiniet vēlreiz vai veiciet atmaksu EveryPay tirgotāja portālā.'

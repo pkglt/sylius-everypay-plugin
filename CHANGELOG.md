@@ -34,10 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   number, amount due, a "you will return to the shop" note and a back-to-order
   link; methods are grouped by country (locale-aware country names), with the
   customer's billing country first, international methods (card, Revolut)
-  second, and the remaining countries after — instead of one flat list where
+  second, and the remaining countries after - instead of one flat list where
   every Baltic bank appeared three times.
 - Template contract: `method_groups` + `payment` replace the flat
-  `payment_methods` variable — re-check any template override.
+  `payment_methods` variable - re-check any template override.
 
 ## [0.2.2] - 2026-07-06
 
@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The API secret field no longer triggers the browser's "suggest strong
   password" generator: the `autocomplete` hint moved from `new-password` to
-  `one-time-code` — the secret is issued by EveryPay and pasted in, never
+  `one-time-code` - the secret is issued by EveryPay and pasted in, never
   created. Autofill and save-password prompts stay suppressed.
 
 ## [0.2.1] - 2026-07-06
@@ -53,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Browsers no longer offer to save or autofill the API credential fields
-  (`autocomplete` hints on the username/secret pair) — an autofilled secret
+  (`autocomplete` hints on the username/secret pair) - an autofilled secret
   submitted as non-empty and silently overwrote the stored one.
 
 ## [0.2.0] - 2026-07-06
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   EveryPay's method logos) and land directly on the chosen payment page;
   methods without a per-method link fall back to the hosted page.
 - Gateway credentials are verified against the EveryPay API when the admin
-  saves the payment method — definitive rejections (bad secret, unknown
+  saves the payment method - definitive rejections (bad secret, unknown
   processing account) fail validation, an unreachable EveryPay never blocks
   saving.
 
@@ -105,7 +105,7 @@ leftover data from the source project.
   `after_pay_url` in the payment request payload; with `sylius/shop-bundle`
   installed the shop after-pay route remains the fallback. The container no
   longer requires the shop bundle to compile.
-- CI matrix: PHP 8.2/8.3/8.4 × highest/lowest dependencies (the lowest
+- CI matrix: PHP 8.2/8.3/8.4 x highest/lowest dependencies (the lowest
   resolution covers the Symfony 6.4 line).
 - `payment_description` on one-off payments (bank-statement text for Open
   Banking, sanitized to the allowed charset and capped at 65 characters).

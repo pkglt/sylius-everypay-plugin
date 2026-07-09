@@ -1,4 +1,4 @@
-# AGENTS.md — instructions for AI coding agents
+# AGENTS.md - instructions for AI coding agents
 
 This file is the canonical agent guide for this repository. `CLAUDE.md`
 (Claude Code) points here; agents for other tools should read this file too.
@@ -6,26 +6,26 @@ This file is the canonical agent guide for this repository. `CLAUDE.md`
 ## What this project is
 
 A **Sylius 2.x payment gateway plugin** for [EveryPay](https://every-pay.com)
-(LHV Paytech — the platform behind SEB/LHV/Swedbank e-commerce payments in the
+(LHV Paytech - the platform behind SEB/LHV/Swedbank e-commerce payments in the
 Baltics). Composer package `pkglt/sylius-everypay-plugin`, PSR-4 namespace
 `Pkg\SyliusEveryPayPlugin\` (tests: `Tests\Pkg\SyliusEveryPayPlugin\`).
 
 It is built on the Sylius **PaymentRequest** abstraction
-(`sylius/payment-bundle`) — the modern, non-Payum pipeline also used by the
+(`sylius/payment-bundle`) - the modern, non-Payum pipeline also used by the
 official Stripe plugin ([Sylius/StripePlugin](https://github.com/Sylius/StripePlugin),
 the structural reference for this repo). There is **no Payum code anywhere**,
 and that is a design decision, not an omission.
 
 Read before non-trivial changes:
 
-- `docs/architecture.md` — the four flows, state mapping, wiring, gotchas
-- `docs/everypay-api.md` — distilled EveryPay API v4 reference
+- `docs/architecture.md` - the four flows, state mapping, wiring, gotchas
+- `docs/everypay-api.md` - distilled EveryPay API v4 reference
 
 ## Commands
 
 ```bash
 composer install
-vendor/bin/phpunit --testsuite unit         # pure unit tests (MockHttpClient — no DB, no kernel)
+vendor/bin/phpunit --testsuite unit         # pure unit tests (MockHttpClient - no DB, no kernel)
 vendor/bin/phpunit --testsuite functional   # real Sylius kernel via sylius/test-application
 vendor/bin/phpunit                          # both suites
 vendor/bin/behat --strict                   # Gherkin scenarios (CI runs phpunit + behat)
@@ -33,9 +33,9 @@ vendor/bin/phpstan analyse                  # level 9, src/ + tests/ (TestApplic
 vendor/bin/ecs check                        # Sylius Labs coding standard (--fix to autofix)
 ```
 
-All gates must pass before a change is done. CI runs a PHP 8.2/8.3/8.4 ×
+All gates must pass before a change is done. CI runs a PHP 8.2/8.3/8.4 x
 highest/lowest dependency matrix (`ramsey/composer-install`
-dependency-versions) — lowest resolves the Symfony 6.4 line. When a lowest
+dependency-versions) - lowest resolves the Symfony 6.4 line. When a lowest
 build breaks on a transitive package's own bad constraints, prefer a
 require-dev floor (invisible to consumers, e.g. api-platform/json-schema,
 knplabs/knp-menu-bundle) over a `conflict` entry; reserve `conflict` for
@@ -46,24 +46,24 @@ var/cache` before the functional suite.
 
 ### Test layout
 
-- `tests/Unit/` — pure unit tests, no kernel, no database.
-- `tests/Functional/` — boots the plugin inside `sylius/test-application`
+- `tests/Unit/` - pure unit tests, no kernel, no database.
+- `tests/Functional/` - boots the plugin inside `sylius/test-application`
   (the official shared plugin test app) on **SQLite** with a scripted
   EveryPay API mock (`tests/Functional/Support/EveryPayHttpMock`, swapped in
   for the real HTTP client by `tests/TestApplication/config/services_test.yaml`).
   `FunctionalTestCase` provides schema/reset (`prepareDatabase()`) and
   programmatic fixtures (channel, everypay payment method, order+payment).
-- `tests/TestApplication/` — the plugin-side overlay the test app bootstrap
+- `tests/TestApplication/` - the plugin-side overlay the test app bootstrap
   reads: `.env` (bundle + config registration via `SYLIUS_TEST_APP_*` vars,
   sync messenger transports, SQLite DSN), `bundles.php`, `config/`.
-- `tests/bootstrap.php` — seeds empty asset manifests and generates the
+- `tests/bootstrap.php` - seeds empty asset manifests and generates the
   gateway-config encryption key before delegating to the test app bootstrap.
 - Gotcha: `doctrine_lazy_objects.php` enables ORM native lazy objects only on
   PHP >= 8.4 (var-exporter 8 removed LazyGhost); do not fold it into YAML.
 - Gotcha: the functional kernel runs with `APP_DEBUG=0` (faster, less memory),
-  so the compiled container does NOT track config changes — after touching
+  so the compiled container does NOT track config changes - after touching
   DI/config files, `rm -rf var/cache` before trusting a test run.
-- `features/` + `tests/Behat/Context/` — Gherkin scenarios over real HTTP
+- `features/` + `tests/Behat/Context/` - Gherkin scenarios over real HTTP
   routes and services: the shop payment lifecycle (redirect to hosted page,
   settled return, callback settle, failure+retry, reload/callback
   idempotency), refunds (admin refund, portal-refund loop guard, failed
@@ -71,12 +71,12 @@ var/cache` before the functional suite.
   (fields render, blank password keeps the stored secret through the real
   update controller + encryption). Redirects are followed manually so the
   external hand-off stays observable; EveryPayShopContext's hook disables
-  kernel reboot and publishes the browser via SharedStorage — test.client
+  kernel reboot and publishes the browser via SharedStorage - test.client
   is a PROTOTYPE service, injecting it into several contexts yields
   different browsers. Context services are wired explicitly in
   tests/TestApplication/config/services_test.yaml; fixtures live in the
   shared tests/Support/ShopFixtures service used by both suites.
-  behat.yml.dist sets calls.error_reporting to exclude deprecations —
+  behat.yml.dist sets calls.error_reporting to exclude deprecations -
   Behat otherwise fails steps on vendor deprecations under newer PHP.
 
 ## Architecture in 30 seconds
@@ -84,25 +84,25 @@ var/cache` before the functional suite.
 Four flows, all driven by `PaymentRequest` commands on the synchronous
 `sylius.payment_request.command_bus`:
 
-- **capture** — create EveryPay one-off payment, redirect customer to the
+- **capture** - create EveryPay one-off payment, redirect customer to the
   hosted `payment_link`
-- **status** — customer returned; re-read state from the EveryPay API
-- **notify** — server callback; resolve payment by `payment_reference`,
+- **status** - customer returned; re-read state from the EveryPay API
+- **notify** - server callback; resolve payment by `payment_reference`,
   re-read state from the API
-- **refund** — admin pressed Refund; call the refund API inside a transaction
+- **refund** - admin pressed Refund; call the refund API inside a transaction
 
 `Processor/EveryPayPaymentSynchronizer` is the heart: status + notify funnel
 into it; it is idempotent and treats `GET /v4/payments/{ref}` as the single
 source of truth.
 
-## Invariants — do not break these
+## Invariants - do not break these
 
 1. **Never trust callbacks or return-URL query params.** They are
    unauthenticated hints. Every state change must come from an authenticated
    `GET /v4/payments/{payment_reference}` call.
 2. **A payment stays `new` until EveryPay reports an in-flight/final state.**
    Capture deliberately does not move the payment to `processing`, and the
-   `initial` state maps to no-op — Sylius' `PaymentToPayResolver` only
+   `initial` state maps to no-op - Sylius' `PaymentToPayResolver` only
    re-enters the pay flow for `new` payments, and customers who bounce off the
    hosted page must be able to retry. Do not "fix" this.
 3. **The synchronizer's workflow context guard**
@@ -117,7 +117,7 @@ source of truth.
    (`$em->refresh($pr, PESSIMISTIC_WRITE)`) serializes concurrent
    `/pay/{hash}` requests. It relies on the bus'`doctrine_transaction`
    middleware providing the transaction.
-6. **Handlers must stay idempotent** — callbacks are redelivered and the
+6. **Handlers must stay idempotent** - callbacks are redelivered and the
    customer return races them.
 
 ## Wiring conventions
@@ -134,49 +134,49 @@ source of truth.
   convention): validation groups and the admin form Twig hooks.
 - **Gateway config fields render only through the
   `gateway_configuration.everypay` Twig hook** (`config/app/twig_hooks.yaml`
-  → `templates/admin/payment_method/...`). The form type alone is not enough;
+  -> `templates/admin/payment_method/...`). The form type alone is not enough;
   if fields "silently disappear", look there first.
-- Validation groups **replace** the Sylius default — `sylius` must always be
+- Validation groups **replace** the Sylius default - `sylius` must always be
   listed alongside `everypay` in `config/app/sylius_payment.yaml`. And a trap:
   Sylius' GatewayConfigType pins its form subtree to the `sylius` group, so
   the factory-specific groups never reach the config form through the form
-  tree — `EveryPayGatewayConfigurationType::configureOptions()` declares
+  tree - `EveryPayGatewayConfigurationType::configureOptions()` declares
   `validation_groups: [sylius, everypay]` itself. Removing that silently
   disables every `everypay`-group constraint (NotBlank, the credential check).
 - The credential check (`Validator/Constraints/ValidEveryPayCredentials`)
   fails saves only on definitive rejections (401/403/404 from
-  /v4/processing_accounts); transport errors and 5xx never block — trust
+  /v4/processing_accounts); transport errors and 5xx never block - trust
   admin data when it cannot be verified.
 - The in-shop method grid is opt-in via gateway config `display_mode`
   (`EveryPayGateway::DISPLAY_MODE_*`); the capture handler stores sanitized
   `payment_methods` (only entries with a per-method payment_link) in the
   payment request responseData, and EveryPayHttpResponseProvider renders
   templates/shop/method_grid.html.twig instead of redirecting. Always keep
-  the redirect fallback — EveryPay may return no per-method links.
+  the redirect fallback - EveryPay may return no per-method links.
 - `EveryPayGateway` holds all shared constants (factory name, config keys,
   base URLs, payment-details helpers). Don't scatter string literals.
 - **The after-pay URL is a seam** (`Provider/AfterPayUrlProviderInterface`):
-  the default alias points at `PayloadAfterPayUrlProvider` (headless — reads
+  the default alias points at `PayloadAfterPayUrlProvider` (headless - reads
   `after_pay_url` from the payment request payload); when SyliusShopBundle is
   registered the extension loads `config/services/integrations/sylius_shop.php`,
   which re-aliases it to `SyliusShopAfterPayUrlProvider` (payload first, shop
   after-pay route as fallback). That class is excluded from the service
-  prototype on purpose — it must not exist in shopless containers. Never
+  prototype on purpose - it must not exist in shopless containers. Never
   autowire `sylius_shop.*` services directly into plugin classes.
 
 ## Conventions
 
 - PHP 8.2+, `declare(strict_types=1)`, `final` classes, constructor property
   promotion, readonly where possible.
-- Coding standard: Sylius Labs ECS; static analysis phpstan **level 9** —
+- Coding standard: Sylius Labs ECS; static analysis phpstan **level 9** -
   keep both green, no baseline files.
 - Translation domains: admin UI keys under `pkg_everypay.ui.*` in
   `translations/messages.<locale>.yaml`; the refund-failure flash lives under
   `sylius.payment.everypay_refund_failed` in `flashes.<locale>.yaml` (the key
-  prefix is dictated by Sylius' flash rendering — do not move it).
-  Locales: en, lt, et, lv — keep all four in sync when adding keys.
+  prefix is dictated by Sylius' flash rendering - do not move it).
+  Locales: en, lt, et, lv - keep all four in sync when adding keys.
 - Tests are pure unit tests using Symfony `MockHttpClient` and hand-rolled
-  fakes — no kernel boots, no DB. Follow the existing test style
+  fakes - no kernel boots, no DB. Follow the existing test style
   (data providers, explicit transition assertions).
 - Commit messages: imperative mood, plain sentences, no conventional-commit
   prefixes, no AI co-author trailers.
@@ -185,7 +185,7 @@ source of truth.
 
 - `api_secret` is a `PasswordType`; a `PRE_SUBMIT` listener restores the
   stored secret when the field is submitted empty ("leave blank to keep").
-  A password widget never re-renders its value — that's why.
+  A password widget never re-renders its value - that's why.
 - EveryPay rejects `customer_url` with a dotless host (`localhost` fails,
   `myshop.localhost` passes).
 - `Fixture/EveryPayPaymentMethodExampleFactory` decorates the payment-method
@@ -194,13 +194,13 @@ source of truth.
   where no `everypay` factory exists). It self-removes when the fixture
   service is absent (`onInvalid: IGNORE_ON_INVALID_REFERENCE`).
 - `EveryPayNotifyPaymentProvider` resolves payments with a DQL `LIKE` over the
-  JSON details column, using the `sylius.model.payment.class` parameter — it
+  JSON details column, using the `sylius.model.payment.class` parameter - it
   must keep working with app-overridden Payment entities.
 
 ## Roadmap (see README)
 
 Partial refunds via `sylius/refund-plugin` (adoption path documented in
-`docs/architecture.md` — the workflow listener must be guarded when adopted),
+`docs/architecture.md` - the workflow listener must be guarded when adopted),
 tokenized/CIT payments, and embedded in-shop checkout via the EveryPay
 Payment Elements JS SDK (blocked on EveryPay confirming/documenting it for
-custom integrations — see docs/everypay-api.md).
+custom integrations - see docs/everypay-api.md).

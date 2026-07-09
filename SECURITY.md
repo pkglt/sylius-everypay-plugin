@@ -6,8 +6,8 @@ This plugin handles payment flows, so we take security reports seriously.
 
 | Version | Supported |
 |---------|-----------|
-| latest 0.x release | ✅ |
-| older releases | ❌ — upgrade first |
+| latest 0.x release | yes |
+| older releases | no - upgrade first |
 
 ## Reporting a vulnerability
 
@@ -24,7 +24,7 @@ reasonable disclosure window before publishing details.
 
 ## Scope notes
 
-- The plugin never trusts EveryPay callbacks or return-URL query parameters —
+- The plugin never trusts EveryPay callbacks or return-URL query parameters -
   every state change is re-verified against the authenticated EveryPay API.
   Reports demonstrating a way around that re-verification are the highest
   priority.

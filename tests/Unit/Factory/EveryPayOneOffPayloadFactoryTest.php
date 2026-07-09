@@ -57,7 +57,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertIsArray($integration);
         self::assertSame('pkglt/sylius-everypay-plugin', $integration['integration']);
         self::assertSame('Sylius', $integration['software']);
-        // Version comes from package metadata (env-dependent) — assert presence, not value.
+        // Version comes from package metadata (env-dependent) - assert presence, not value.
         self::assertIsString($integration['version']);
         self::assertNotSame('', $integration['version']);
     }

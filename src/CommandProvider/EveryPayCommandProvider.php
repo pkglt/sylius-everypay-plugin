@@ -14,7 +14,7 @@ use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
- * Maps EveryPay PaymentRequest actions to command-bus commands — a single
+ * Maps EveryPay PaymentRequest actions to command-bus commands - a single
  * provider switching on action instead of the Sylius per-action composite,
  * so there is exactly one wiring point (the attribute tag below).
  */

@@ -10,7 +10,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Used when SyliusShopBundle is installed (registered conditionally by the
- * plugin extension — this class is deliberately excluded from the service
+ * plugin extension - this class is deliberately excluded from the service
  * prototype). An explicit payload URL still wins so API-created payment
  * requests keep working in hybrid shop+API applications; the shop's
  * /order/after-pay/{hash} route is the fallback.

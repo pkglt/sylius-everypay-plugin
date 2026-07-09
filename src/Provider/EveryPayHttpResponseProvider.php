@@ -17,11 +17,11 @@ use Twig\Environment;
 
 /**
  * After the capture handler created the EveryPay payment, sends the customer
- * to the hosted payment page — or, when the gateway is configured with the
+ * to the hosted payment page - or, when the gateway is configured with the
  * method grid, renders the payment method buttons (per-method direct links)
  * inside the shop first. When it does not support the request (capture
  * failed, or the payment already reached a final state), Sylius falls back
- * to /after-pay/{hash} → status check → thank-you/retry.
+ * to /after-pay/{hash} -> status check -> thank-you/retry.
  */
 #[AutoconfigureTag('sylius.payment_request.provider.http_response', ['gateway_factory' => EveryPayGateway::FACTORY_NAME])]
 final class EveryPayHttpResponseProvider implements HttpResponseProviderInterface

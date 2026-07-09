@@ -18,7 +18,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * pressed the core Refund button. Failures deliberately propagate:
  * RefundEveryPayPaymentListener runs this inside a transaction and rolls the
  * whole refund back (state + payment request) when the API call fails.
- * The payment state itself is not touched here — the admin's refund
+ * The payment state itself is not touched here - the admin's refund
  * transition already moved it.
  */
 #[AsMessageHandler]

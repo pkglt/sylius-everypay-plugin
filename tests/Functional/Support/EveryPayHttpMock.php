@@ -27,7 +27,7 @@ final class EveryPayHttpMock extends MockHttpClient
             $this->recordedRequests[] = ['method' => $method, 'url' => $url, 'body' => is_string($body) ? $body : null];
 
             if ([] === $this->queue) {
-                throw new \LogicException(sprintf('Unexpected EveryPay API request "%s %s" — no response queued.', $method, $url));
+                throw new \LogicException(sprintf('Unexpected EveryPay API request "%s %s" - no response queued.', $method, $url));
             }
 
             return array_shift($this->queue);

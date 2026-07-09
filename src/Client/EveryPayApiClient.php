@@ -12,7 +12,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * Talks to the EveryPay Payment API v4 (see docs/everypay-api.md
  * and the saved OpenAPI spec). All endpoints use HTTP Basic auth; every body
- * carries api_username, a unique nonce and an ISO 8601 timestamp (±5 min
+ * carries api_username, a unique nonce and an ISO 8601 timestamp (+/-5 min
  * server-time window).
  */
 final class EveryPayApiClient
@@ -25,7 +25,7 @@ final class EveryPayApiClient
     }
 
     /**
-     * POST /v4/payments/oneoff — creates a payment and returns (among others)
+     * POST /v4/payments/oneoff - creates a payment and returns (among others)
      * `payment_reference` and the hosted payment page `payment_link`.
      *
      * @param array<string, mixed> $payload business fields (amount, order_reference, customer_url, ...)
@@ -42,7 +42,7 @@ final class EveryPayApiClient
     }
 
     /**
-     * GET /v4/payments/{payment_reference} — the authoritative payment state.
+     * GET /v4/payments/{payment_reference} - the authoritative payment state.
      * Callbacks and customer returns are unauthenticated hints; this call is
      * the only source of truth.
      *
@@ -60,7 +60,7 @@ final class EveryPayApiClient
     }
 
     /**
-     * GET /v4/processing_accounts/{account_name} — the cheapest authenticated
+     * GET /v4/processing_accounts/{account_name} - the cheapest authenticated
      * call there is; used to verify admin-entered credentials. A short
      * timeout keeps the admin form responsive.
      *
@@ -78,7 +78,7 @@ final class EveryPayApiClient
     }
 
     /**
-     * POST /v4/payments/refund — full or partial refund of a settled payment.
+     * POST /v4/payments/refund - full or partial refund of a settled payment.
      *
      * @return array<string, mixed>
      */

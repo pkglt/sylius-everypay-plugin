@@ -62,7 +62,7 @@ final class EveryPayShopContext implements Context
         // the entities must survive across the requests a scenario performs.
         $this->client->disableReboot();
         $this->client->followRedirects(false);
-        // test.client is a prototype service — every injection is a fresh
+        // test.client is a prototype service - every injection is a fresh
         // browser. Publish this one so all contexts drive the same browser
         // (and therefore the same un-rebooted container).
         $this->sharedStorage->set('client', $this->client);
@@ -347,7 +347,7 @@ final class EveryPayShopContext implements Context
     }
 
     /**
-     * The return URL EveryPay would send the customer back to — taken from the
+     * The return URL EveryPay would send the customer back to - taken from the
      * customer_url of the recorded oneoff request, exactly like the real flow.
      */
     private function customerReturnPath(): string
@@ -367,7 +367,7 @@ final class EveryPayShopContext implements Context
             return $path;
         }
 
-        throw new \RuntimeException('No oneoff request was recorded — did the customer proceed to pay?');
+        throw new \RuntimeException('No oneoff request was recorded - did the customer proceed to pay?');
     }
 
     private function payment(): PaymentInterface

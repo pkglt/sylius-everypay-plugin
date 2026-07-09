@@ -6,6 +6,6 @@ parameters:
         - tests
 
     excludePaths:
-        # Test application kernel config — contains dependency-version-dependent
+        # Test application kernel config - contains dependency-version-dependent
         # runtime switches phpstan would judge against the installed set only.
         - tests/TestApplication

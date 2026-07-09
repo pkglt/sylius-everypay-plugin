@@ -72,7 +72,7 @@ final class NotifyEndpointTest extends FunctionalTestCase
         self::assertSame(PaymentInterface::STATE_COMPLETED, $payment->getState());
         self::assertSame('settled', EveryPayGateway::detailsFrom($payment->getDetails())['payment_state'] ?? null);
 
-        // The callback itself was never trusted — the state came from the API.
+        // The callback itself was never trusted - the state came from the API.
         $requests = $this->everyPayHttpMock()->recordedRequests();
         self::assertCount(1, $requests);
         self::assertSame('GET', $requests[0]['method']);
