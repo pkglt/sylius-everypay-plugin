@@ -205,6 +205,12 @@ This repository is set up for AI-agent-assisted development - see
   one-offs, hosted iframe card form, SAQ A per EveryPay's PCI classification).
   Blocked until EveryPay confirms/documents the SDK for custom integrations -
   see [docs/everypay-api.md](docs/everypay-api.md#payment-elements-embedded-checkout)
+- In-shop **Apple Pay / Google Pay buttons** - both wallets already work on the
+  hosted payment page with no plugin changes (enable them on the processing
+  account); native buttons inside the store ride on the Payment Elements work
+  above, or on EveryPay's dedicated wallet web clients
+  (`apple-pay-client` / `google-pay-client`), and need Apple Pay merchant
+  domain verification through EveryPay
 
 ## Contributing & security
 
