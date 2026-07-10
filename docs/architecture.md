@@ -136,6 +136,41 @@ services:
 No DB migration: only core entities (`sylius_payment`,
 `sylius_payment_request`, `sylius_gateway_config`) are used.
 
+## Design decisions worth recording
+
+- One command set, display modes as data: the Stripe plugin splits
+  Checkout/WebElements into separate command namespaces because those are
+  different API flows. EveryPay's redirect and method grid (and the planned
+  Payment Elements mode) share the same oneoff flow and differ only in how
+  the customer reaches the payment page - so `display_mode` stays gateway
+  config, not a namespace.
+- Notify resolution keeps the DQL `LIKE`: `JSON_EXTRACT` is not portable
+  across MySQL/MariaDB/PostgreSQL/SQLite in DQL, and a dedicated indexed
+  column would force the migration this plugin deliberately avoids. The
+  method scope plus the 16-128 char hex reference make collisions
+  practically impossible.
+
+## Stability contract (pre-1.0)
+
+Until 1.0, any 0.x minor may change anything below, with a CHANGELOG entry.
+What 1.0 will freeze as public API:
+
+- the `everypay` gateway factory name and the gateway config keys
+  (`EveryPayGateway::CONFIG_*`, the environment and display_mode values);
+- the shape of `payment.details['everypay']` (payment_reference,
+  payment_link, payment_state, order_reference, account_name, currency,
+  created_at, payment_method, standing_amount, synchronized_at);
+- translation keys under `pkg_everypay.ui.*` and the
+  `sylius.payment.everypay_refund_failed` flash;
+- template names and their variables (`shop/method_grid.html.twig`,
+  `admin/order/show/payments/item/everypay.html.twig`) and the plugin's
+  twig-hook registrations;
+- the four PaymentRequest command classes and the `EveryPayApiClient` /
+  `AfterPayUrlProviderInterface` signatures.
+
+Everything else - the synchronizer internals, the payload factory's field
+assembly, the grid view factory, the test support classes - is internal.
+
 ## Gotchas worth knowing
 
 - **Admin gateway config fields render only via a per-factory Twig hook** -
