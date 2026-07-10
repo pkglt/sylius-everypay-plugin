@@ -12,6 +12,7 @@ use Pkg\SyliusEveryPayPlugin\CommandHandler\CaptureEveryPayPaymentHandler;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;
 use Pkg\SyliusEveryPayPlugin\Provider\AfterPayUrlProviderInterface;
+use Pkg\SyliusEveryPayPlugin\Provider\MethodGridViewFactory;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
@@ -202,6 +203,7 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
             $afterPayUrlProvider,
             $stateMachine,
             $this->createStub(EntityManagerInterface::class),
+            new MethodGridViewFactory(),
             $logger ?? new NullLogger(),
         );
     }

@@ -88,6 +88,7 @@ src/
 |   |-- EveryPayHttpResponseProvider.php    redirect to payment_link or render the method
 |   |                                       grid (guards: capture action, PR processing,
 |   |                                       payment new/processing)
+|   |-- MethodGridViewFactory.php           oneoff payment_methods -> grid options/groups
 |   `-- EveryPayNotifyPaymentProvider.php   callback -> Payment resolution
 |-- Form/EveryPayGatewayConfigurationType.php   admin config form (5 fields)
 |-- Validator/Constraints/ValidEveryPayCredentials{,Validator}.php  credential check on save

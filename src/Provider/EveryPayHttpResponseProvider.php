@@ -33,6 +33,7 @@ final readonly class EveryPayHttpResponseProvider implements HttpResponseProvide
 
     public function __construct(
         private Environment $twig,
+        private MethodGridViewFactory $methodGrid,
     ) {
     }
 
@@ -67,13 +68,13 @@ final readonly class EveryPayHttpResponseProvider implements HttpResponseProvide
         /** @var string $paymentLink */
         $paymentLink = $responseData['payment_link'];
 
-        $methodOptions = EveryPayGateway::paymentMethodOptionsFrom($responseData['payment_methods'] ?? null);
+        $methodOptions = $this->methodGrid->optionsFrom($responseData['payment_methods'] ?? null);
         if ([] !== $methodOptions && EveryPayGateway::DISPLAY_MODE_METHOD_GRID === $this->displayModeFor($paymentRequest)) {
             $payment = EveryPayGateway::corePaymentFrom($paymentRequest);
             $preferredCountry = $payment->getOrder()?->getBillingAddress()?->getCountryCode();
 
             return new Response($this->twig->render('@PkgSyliusEveryPayPlugin/shop/method_grid.html.twig', [
-                'method_groups' => EveryPayGateway::groupPaymentMethodOptions($methodOptions, $preferredCountry),
+                'method_groups' => $this->methodGrid->group($methodOptions, $preferredCountry),
                 'payment' => $payment,
                 'payment_link' => $paymentLink,
                 'payment_request' => $paymentRequest,

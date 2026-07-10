@@ -7,6 +7,7 @@ namespace Tests\Pkg\SyliusEveryPayPlugin\Unit\Provider;
 use PHPUnit\Framework\TestCase;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Provider\EveryPayHttpResponseProvider;
+use Pkg\SyliusEveryPayPlugin\Provider\MethodGridViewFactory;
 use Sylius\Bundle\ResourceBundle\Controller\RequestConfiguration;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -41,7 +42,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
     {
         $twig = $this->createMock(Environment::class);
         $twig->expects(self::never())->method('render');
-        $provider = new EveryPayHttpResponseProvider($twig);
+        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory());
 
         // Grid configured, but EveryPay returned no per-method links: the
         // hosted page redirect must stay as the fallback.
@@ -77,7 +78,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
                 }),
             )
             ->willReturn('<grid>');
-        $provider = new EveryPayHttpResponseProvider($twig);
+        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory());
 
         $paymentRequest = $this->paymentRequest(
             displayMode: EveryPayGateway::DISPLAY_MODE_METHOD_GRID,
@@ -128,7 +129,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
 
     private function provider(): EveryPayHttpResponseProvider
     {
-        return new EveryPayHttpResponseProvider($this->createMock(Environment::class));
+        return new EveryPayHttpResponseProvider($this->createMock(Environment::class), new MethodGridViewFactory());
     }
 
     private function requestConfiguration(): RequestConfiguration

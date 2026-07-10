@@ -14,6 +14,7 @@ use Pkg\SyliusEveryPayPlugin\Command\CaptureEveryPayPayment;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;
 use Pkg\SyliusEveryPayPlugin\Provider\AfterPayUrlProviderInterface;
+use Pkg\SyliusEveryPayPlugin\Provider\MethodGridViewFactory;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
@@ -40,6 +41,7 @@ final readonly class CaptureEveryPayPaymentHandler
         private AfterPayUrlProviderInterface $afterPayUrlProvider,
         private StateMachineInterface $stateMachine,
         private EntityManagerInterface $entityManager,
+        private MethodGridViewFactory $methodGrid,
         private LoggerInterface $logger,
     ) {
     }
@@ -126,7 +128,7 @@ final readonly class CaptureEveryPayPaymentHandler
             'payment_reference' => $paymentReference,
             // Per-method direct links (bank buttons) for the optional
             // in-shop method grid; empty when EveryPay returns none.
-            'payment_methods' => EveryPayGateway::paymentMethodOptionsFrom($response['payment_methods'] ?? null),
+            'payment_methods' => $this->methodGrid->optionsFrom($response['payment_methods'] ?? null),
         ]);
 
         // The payment intentionally stays in `new`: PaymentToPayResolver only
