@@ -12,7 +12,6 @@ use Pkg\SyliusEveryPayPlugin\CommandHandler\CaptureEveryPayPaymentHandler;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Factory\EveryPayOneOffPayloadFactory;
 use Pkg\SyliusEveryPayPlugin\Provider\AfterPayUrlProviderInterface;
-use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
@@ -28,6 +27,7 @@ use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Tests\Pkg\SyliusEveryPayPlugin\Support\RecordingLogger;
 
 final class CaptureEveryPayPaymentHandlerTest extends TestCase
 {
@@ -95,56 +95,57 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         self::assertSame([], $paymentRequest->getResponseData());
     }
 
-    /** @var list<array{string, string}> */
-    private array $loggedRecords = [];
+    public function testResponseWithoutReferenceOrLinkFailsTheAttempt(): void
+    {
+        $paymentRequest = $this->paymentRequest();
+        $handler = $this->handler($paymentRequest, new MockResponse(json_encode([
+            'payment_state' => 'initial',
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]));
+
+        $handler(new CaptureEveryPayPayment('hash'));
+
+        // A 2xx response without the hosted page link is as unusable as an
+        // API error: fail the attempt so the customer gets a fresh payment.
+        self::assertArrayHasKey('error', $paymentRequest->getResponseData());
+        self::assertSame(
+            [
+                [$paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_FAIL],
+                [$paymentRequest->getPayment(), PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_FAIL],
+            ],
+            $this->appliedTransitions,
+        );
+    }
 
     public function testWarnsWhenTheProcessingAccountSuggestsAnotherCurrency(): void
     {
+        $logger = new RecordingLogger();
         $paymentRequest = $this->paymentRequest(paymentCurrency: 'USD');
         $handler = $this->handler($paymentRequest, new MockResponse(json_encode([
             'payment_reference' => self::PAYMENT_REFERENCE,
             'payment_link' => self::PAYMENT_LINK,
-        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]), $this->recordingLogger());
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]), $logger);
 
         $handler(new CaptureEveryPayPayment('hash'));
 
         // EUR3D1 hints EUR, the payment is USD - warn, but never block.
-        $warnings = array_filter($this->loggedRecords, static fn (array $r): bool => 'warning' === $r[0]);
+        $warnings = $logger->messages('warning');
         self::assertCount(1, $warnings);
-        self::assertStringContainsString('different currency', (string) array_values($warnings)[0][1]);
+        self::assertStringContainsString('different currency', $warnings[0]);
         self::assertSame(self::PAYMENT_LINK, $paymentRequest->getResponseData()['payment_link']);
     }
 
     public function testDoesNotWarnWhenTheCurrenciesMatch(): void
     {
+        $logger = new RecordingLogger();
         $paymentRequest = $this->paymentRequest(paymentCurrency: 'EUR');
         $handler = $this->handler($paymentRequest, new MockResponse(json_encode([
             'payment_reference' => self::PAYMENT_REFERENCE,
             'payment_link' => self::PAYMENT_LINK,
-        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]), $this->recordingLogger());
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]), $logger);
 
         $handler(new CaptureEveryPayPayment('hash'));
 
-        self::assertSame([], array_filter($this->loggedRecords, static fn (array $r): bool => 'warning' === $r[0]));
-    }
-
-    private function recordingLogger(): LoggerInterface
-    {
-        $this->loggedRecords = [];
-        $sink = function (string $level, string $message): void {
-            $this->loggedRecords[] = [$level, $message];
-        };
-
-        return new class($sink) extends AbstractLogger {
-            public function __construct(private readonly \Closure $sink)
-            {
-            }
-
-            public function log($level, \Stringable|string $message, array $context = []): void
-            {
-                ($this->sink)(is_string($level) ? $level : 'other', (string) $message);
-            }
-        };
+        self::assertSame([], $logger->messages('warning'));
     }
 
     private function paymentRequest(?string $paymentCurrency = null): PaymentRequest

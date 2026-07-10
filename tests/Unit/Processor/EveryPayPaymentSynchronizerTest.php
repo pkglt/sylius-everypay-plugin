@@ -10,6 +10,7 @@ use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiClient;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Processor\EveryPayPaymentSynchronizer;
 use Pkg\SyliusEveryPayPlugin\Processor\EveryPayStateMapper;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\Payment;
@@ -19,6 +20,7 @@ use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Tests\Pkg\SyliusEveryPayPlugin\Support\RecordingLogger;
 
 final class EveryPayPaymentSynchronizerTest extends TestCase
 {
@@ -71,9 +73,11 @@ final class EveryPayPaymentSynchronizerTest extends TestCase
     public function testUnreachableTargetStateIsNeverAppliedSilently(): void
     {
         // failed -> completed has no transition in the sylius_payment graph;
-        // the synchronizer must not apply anything (and warns for reconciliation)
+        // the synchronizer must not apply anything and must warn loudly so an
+        // operator reconciles the moved money by hand.
         $payment = $this->everyPayPayment(PaymentInterface::STATE_FAILED);
-        $synchronizer = $this->synchronizer(['payment_state' => 'settled']);
+        $logger = new RecordingLogger();
+        $synchronizer = $this->synchronizer(['payment_state' => 'settled'], $logger);
 
         $this->stateMachine
             ->expects(self::once())
@@ -83,6 +87,29 @@ final class EveryPayPaymentSynchronizerTest extends TestCase
         $this->stateMachine->expects(self::never())->method('apply');
 
         $synchronizer->synchronize($payment);
+
+        $warnings = $logger->messages('warning');
+        self::assertCount(1, $warnings);
+        self::assertStringContainsString('reconcile manually', $warnings[0]);
+    }
+
+    public function testChargedBackIsLeftAloneWithALoudWarning(): void
+    {
+        $payment = $this->everyPayPayment(PaymentInterface::STATE_COMPLETED);
+        $logger = new RecordingLogger();
+        $synchronizer = $this->synchronizer(['payment_state' => 'charged_back'], $logger);
+
+        $this->stateMachine->expects(self::never())->method('getTransitionToState');
+        $this->stateMachine->expects(self::never())->method('apply');
+
+        $synchronizer->synchronize($payment);
+
+        // Deliberately unmapped: chargebacks are handled in the merchant
+        // portal, but the operator must hear about them.
+        $warnings = $logger->messages('warning');
+        self::assertCount(1, $warnings);
+        self::assertStringContainsString('charged back', $warnings[0]);
+        self::assertSame('charged_back', EveryPayGateway::detailsFrom($payment->getDetails())['payment_state']);
     }
 
     public function testMissingPaymentReferenceFailsThePaymentWithoutApiCall(): void
@@ -121,7 +148,7 @@ final class EveryPayPaymentSynchronizerTest extends TestCase
     /**
      * @param array<string, mixed> $remotePayment
      */
-    private function synchronizer(array $remotePayment): EveryPayPaymentSynchronizer
+    private function synchronizer(array $remotePayment, ?LoggerInterface $logger = null): EveryPayPaymentSynchronizer
     {
         $httpClient = new MockHttpClient(new MockResponse(json_encode($remotePayment, \JSON_THROW_ON_ERROR)));
 
@@ -129,7 +156,7 @@ final class EveryPayPaymentSynchronizerTest extends TestCase
             new EveryPayApiClient($httpClient),
             new EveryPayStateMapper(),
             $this->stateMachine,
-            new NullLogger(),
+            $logger ?? new NullLogger(),
         );
     }
 

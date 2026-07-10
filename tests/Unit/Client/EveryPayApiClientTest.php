@@ -27,7 +27,16 @@ final class EveryPayApiClientTest extends TestCase
     {
         $capturedOptions = null;
         $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$capturedOptions): MockResponse {
-            $capturedOptions = ['method' => $method, 'url' => $url, 'body' => json_decode((string) $options['body'], true)];
+            $normalizedHeaders = $options['normalized_headers'] ?? null;
+            $authorization = is_array($normalizedHeaders) && is_array($normalizedHeaders['authorization'] ?? null)
+                ? ($normalizedHeaders['authorization'][0] ?? null)
+                : null;
+            $capturedOptions = [
+                'method' => $method,
+                'url' => $url,
+                'body' => json_decode((string) $options['body'], true),
+                'authorization' => $authorization,
+            ];
 
             return new MockResponse(json_encode([
                 'payment_reference' => str_repeat('a', 64),
@@ -46,6 +55,10 @@ final class EveryPayApiClientTest extends TestCase
         self::assertNotNull($capturedOptions);
         self::assertSame('POST', $capturedOptions['method']);
         self::assertSame('https://igw-demo.every-pay.com/api/v4/payments/oneoff', $capturedOptions['url']);
+        self::assertSame(
+            'Authorization: Basic ' . base64_encode('a04e7ce1060e7024:secret'),
+            $capturedOptions['authorization'],
+        );
 
         $body = $capturedOptions['body'];
         self::assertIsArray($body);
@@ -109,6 +122,20 @@ final class EveryPayApiClientTest extends TestCase
         $this->expectExceptionMessageMatches('/The timestamp is not valid/');
 
         $client->createOneOffPayment($this->credentials(), []);
+    }
+
+    public function testSuccessfulResponseWithANonJsonBodyThrows(): void
+    {
+        // A CDN error page or WAF challenge with a 200 status must not be
+        // mistaken for a payment state.
+        $httpClient = new MockHttpClient(new MockResponse('<html>gateway page</html>', ['http_code' => 200]));
+
+        $client = new EveryPayApiClient($httpClient);
+
+        $this->expectException(EveryPayApiException::class);
+        $this->expectExceptionMessageMatches('/non-JSON body/');
+
+        $client->getPayment($this->credentials(), 'abc123def456abc1');
     }
 
     public function testTransportErrorIsWrappedInApiException(): void

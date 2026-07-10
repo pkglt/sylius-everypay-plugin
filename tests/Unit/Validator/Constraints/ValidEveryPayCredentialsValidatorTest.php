@@ -44,6 +44,17 @@ final class ValidEveryPayCredentialsValidatorTest extends ConstraintValidatorTes
             ->assertRaised();
     }
 
+    public function testForbiddenCredentialsAddAViolationOnTheSecret(): void
+    {
+        $this->apiResponse = new MockResponse('{"error":{"message":"Forbidden"}}', ['http_code' => 403]);
+
+        $this->validator->validate($this->config(), new ValidEveryPayCredentials());
+
+        $this->buildViolation('pkg_everypay.credentials.rejected')
+            ->atPath('property.path[api_secret]')
+            ->assertRaised();
+    }
+
     public function testUnknownProcessingAccountAddsAViolationOnTheAccountName(): void
     {
         $this->apiResponse = new MockResponse('{"error":{"message":"not found"}}', ['http_code' => 404]);

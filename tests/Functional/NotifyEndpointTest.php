@@ -78,4 +78,32 @@ final class NotifyEndpointTest extends FunctionalTestCase
         self::assertSame('GET', $requests[0]['method']);
         self::assertStringContainsString('/v4/payments/' . self::PAYMENT_REFERENCE, $requests[0]['url']);
     }
+
+    public function testApiFailureBubblesUpSoEveryPayRedelivers(): void
+    {
+        $client = static::createClient();
+        $this->prepareDatabase();
+        $channel = $this->createShopEnvironment();
+        $method = $this->createEveryPayPaymentMethod($channel);
+        $payment = $this->createOrderWithPayment($channel, $method, [
+            EveryPayGateway::DETAILS_KEY => [
+                'payment_reference' => self::PAYMENT_REFERENCE,
+            ],
+        ]);
+        $stateBefore = $payment->getState();
+
+        $this->everyPayHttpMock()->queueJson(['error' => ['message' => 'Internal error']], 500);
+
+        $client->request(
+            'POST',
+            '/payment-methods/everypay?payment_reference=' . self::PAYMENT_REFERENCE . '&event_name=status_updated',
+        );
+
+        // The non-2xx response is the redelivery contract: EveryPay retries
+        // the callback (up to 6 times over 72 h) instead of dropping it.
+        self::assertResponseStatusCodeSame(500);
+
+        $this->entityManager()->refresh($payment);
+        self::assertSame($stateBefore, $payment->getState());
+    }
 }
