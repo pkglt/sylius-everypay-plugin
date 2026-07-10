@@ -22,14 +22,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @implements ExampleFactoryInterface<PaymentMethodInterface>
  */
 #[AsDecorator(decorates: 'sylius.fixture.example_factory.payment_method', onInvalid: ContainerInterface::IGNORE_ON_INVALID_REFERENCE)]
-final class EveryPayPaymentMethodExampleFactory implements ExampleFactoryInterface
+final readonly class EveryPayPaymentMethodExampleFactory implements ExampleFactoryInterface
 {
     /**
      * @param ExampleFactoryInterface<PaymentMethodInterface> $decorated
      */
     public function __construct(
         #[AutowireDecorated]
-        private readonly ExampleFactoryInterface $decorated,
+        private ExampleFactoryInterface $decorated,
     ) {
     }
 

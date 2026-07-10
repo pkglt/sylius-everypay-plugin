@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Gateway log entries go to a dedicated `everypay` Monolog channel, so
+  operators can route or filter them independently.
+
 ### Changed
 
 - Documentation, code comments and UI texts use plain ASCII punctuation.

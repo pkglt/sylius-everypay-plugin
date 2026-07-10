@@ -6,6 +6,7 @@ namespace Pkg\SyliusEveryPayPlugin\CommandHandler;
 
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Attribute\WithMonologChannel;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiClient;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiException;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayCredentials;
@@ -29,6 +30,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * GET /pay/{hash} right after checkout completion.
  */
 #[AsMessageHandler]
+#[WithMonologChannel('everypay')]
 final readonly class CaptureEveryPayPaymentHandler
 {
     public function __construct(

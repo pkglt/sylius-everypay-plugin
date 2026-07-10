@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pkg\SyliusEveryPayPlugin\Processor;
 
+use Monolog\Attribute\WithMonologChannel;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiClient;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayCredentials;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
@@ -19,7 +20,8 @@ use Sylius\Component\Payment\PaymentTransitions;
  * two arrive in any order and any number of times, so this is idempotent:
  * when the payment is already in the target state nothing happens.
  */
-final class EveryPayPaymentSynchronizer
+#[WithMonologChannel('everypay')]
+final readonly class EveryPayPaymentSynchronizer
 {
     /**
      * Workflow context marker set on every transition this synchronizer
@@ -30,10 +32,10 @@ final class EveryPayPaymentSynchronizer
     public const WORKFLOW_CONTEXT = 'pkg_everypay_sync';
 
     public function __construct(
-        private readonly EveryPayApiClient $apiClient,
-        private readonly EveryPayStateMapper $stateMapper,
-        private readonly StateMachineInterface $stateMachine,
-        private readonly LoggerInterface $logger,
+        private EveryPayApiClient $apiClient,
+        private EveryPayStateMapper $stateMapper,
+        private StateMachineInterface $stateMachine,
+        private LoggerInterface $logger,
     ) {
     }
 

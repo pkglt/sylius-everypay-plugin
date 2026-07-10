@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Sylius payment. Authentication fields (api_username, nonce, timestamp,
  * account_name) are added by the API client.
  */
-final class EveryPayOneOffPayloadFactory
+final readonly class EveryPayOneOffPayloadFactory
 {
     /** Locales accepted by the EveryPay hosted payment page. */
     private const ALLOWED_LOCALES = [
@@ -27,7 +27,7 @@ final class EveryPayOneOffPayloadFactory
     private const PREFERRED_COUNTRIES = ['EE', 'LV', 'LT'];
 
     public function __construct(
-        private readonly RequestStack $requestStack,
+        private RequestStack $requestStack,
     ) {
     }
 
@@ -42,8 +42,7 @@ final class EveryPayOneOffPayloadFactory
         }
 
         $payload = [
-            // Sylius stores amounts in cents; EveryPay expects a 2-digit decimal
-            'amount' => round(((int) $payment->getAmount()) / 100, 2),
+            'amount' => EveryPayGateway::amountToDecimal((int) $payment->getAmount()),
             // Unique per payment attempt: EveryPay validates order_reference
             // uniqueness per shop, and Sylius creates a new Payment per retry
             'order_reference' => sprintf('%s-%d', (string) $order->getNumber(), (int) $payment->getId()),

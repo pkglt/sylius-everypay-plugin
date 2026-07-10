@@ -46,7 +46,7 @@ final readonly class RefundEveryPayPaymentHandler
         $response = $this->apiClient->refundPayment(
             EveryPayCredentials::fromPaymentMethod($payment->getMethod()),
             $paymentReference,
-            round(((int) $payment->getAmount()) / 100, 2),
+            EveryPayGateway::amountToDecimal((int) $payment->getAmount()),
         );
 
         $details[EveryPayGateway::DETAILS_KEY] = array_merge(EveryPayGateway::detailsFrom($details), [

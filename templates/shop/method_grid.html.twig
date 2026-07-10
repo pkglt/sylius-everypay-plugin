@@ -33,7 +33,8 @@
                                class="card h-100 text-decoration-none text-reset text-center p-3"
                                data-test-everypay-method="{{ method.source }}">
                                 {% if method.logo_url %}
-                                    <img src="{{ method.logo_url }}" alt="{{ method.display_name }}"
+                                    {# Decorative: the method name follows as text, so screen readers should not hear it twice. #}
+                                    <img src="{{ method.logo_url }}" alt=""
                                          class="mx-auto d-block mb-2" style="max-height: 2.5rem; max-width: 100%;" loading="lazy">
                                 {% endif %}
                                 <span>{{ method.display_name }}</span>

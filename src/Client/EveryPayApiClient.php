@@ -15,12 +15,12 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * carries api_username, a unique nonce and an ISO 8601 timestamp (+/-5 min
  * server-time window).
  */
-final class EveryPayApiClient
+final readonly class EveryPayApiClient
 {
     private const REQUEST_TIMEOUT = 30;
 
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
+        private HttpClientInterface $httpClient,
     ) {
     }
 

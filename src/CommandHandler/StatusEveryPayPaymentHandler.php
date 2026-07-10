@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pkg\SyliusEveryPayPlugin\CommandHandler;
 
+use Monolog\Attribute\WithMonologChannel;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiException;
 use Pkg\SyliusEveryPayPlugin\Command\StatusEveryPayPayment;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
@@ -21,6 +22,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * the server callback retries (up to 6 times over 72 h) settle it later.
  */
 #[AsMessageHandler]
+#[WithMonologChannel('everypay')]
 final readonly class StatusEveryPayPaymentHandler
 {
     public function __construct(

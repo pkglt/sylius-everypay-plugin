@@ -49,6 +49,12 @@ final class EveryPayGateway
     /** Sent as integration_details.integration (EveryPay merchant telemetry). */
     public const INTEGRATION_NAME = 'pkglt/sylius-everypay-plugin';
 
+    /** Sylius stores amounts in cents; the EveryPay API expects a 2-decimal number. */
+    public static function amountToDecimal(int $amountInCents): float
+    {
+        return round($amountInCents / 100, 2);
+    }
+
     /**
      * @param array<array-key, mixed> $paymentDetails
      *

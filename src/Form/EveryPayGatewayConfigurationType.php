@@ -34,9 +34,6 @@ final class EveryPayGatewayConfigurationType extends AbstractType
                 // Browsers pair a text field followed by a password field as
                 // login credentials and offer to save/autofill them - an
                 // autofilled secret would silently overwrite the stored one.
-                // one-time-code = externally issued, pasted in: no autofill,
-                // no save prompt, and (unlike new-password) no "suggest
-                // strong password" generator.
                 'attr' => ['autocomplete' => 'off'],
                 'constraints' => [
                     new NotBlank(groups: ['everypay']),
@@ -46,6 +43,9 @@ final class EveryPayGatewayConfigurationType extends AbstractType
                 'label' => 'pkg_everypay.ui.api_secret',
                 'help' => 'pkg_everypay.ui.api_secret_help',
                 'required' => false,
+                // one-time-code = externally issued, pasted in: no autofill,
+                // no save prompt, and (unlike new-password) no "suggest
+                // strong password" generator.
                 'attr' => ['autocomplete' => 'one-time-code'],
                 'constraints' => [
                     new NotBlank(groups: ['everypay']),

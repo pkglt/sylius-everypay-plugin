@@ -24,7 +24,7 @@ use Twig\Environment;
  * to /after-pay/{hash} -> status check -> thank-you/retry.
  */
 #[AutoconfigureTag('sylius.payment_request.provider.http_response', ['gateway_factory' => EveryPayGateway::FACTORY_NAME])]
-final class EveryPayHttpResponseProvider implements HttpResponseProviderInterface
+final readonly class EveryPayHttpResponseProvider implements HttpResponseProviderInterface
 {
     private const REDIRECTABLE_PAYMENT_STATES = [
         PaymentInterface::STATE_NEW,
@@ -32,7 +32,7 @@ final class EveryPayHttpResponseProvider implements HttpResponseProviderInterfac
     ];
 
     public function __construct(
-        private readonly Environment $twig,
+        private Environment $twig,
     ) {
     }
 

@@ -24,7 +24,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * state from the EveryPay API.
  */
 #[AsNotifyPaymentProvider]
-final class EveryPayNotifyPaymentProvider implements NotifyPaymentProviderInterface
+final readonly class EveryPayNotifyPaymentProvider implements NotifyPaymentProviderInterface
 {
     /** EveryPay payment_reference is a long hex string. */
     private const PAYMENT_REFERENCE_PATTERN = '/^[a-f0-9]{16,128}$/i';
@@ -33,9 +33,9 @@ final class EveryPayNotifyPaymentProvider implements NotifyPaymentProviderInterf
      * @param class-string $paymentClass the app-configured sylius_payment resource class
      */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private EntityManagerInterface $entityManager,
         #[Autowire(param: 'sylius.model.payment.class')]
-        private readonly string $paymentClass,
+        private string $paymentClass,
     ) {
     }
 

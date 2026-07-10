@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pkg\SyliusEveryPayPlugin\EventListener;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Attribute\WithMonologChannel;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Processor\EveryPayPaymentSynchronizer;
 use Psr\Log\LoggerInterface;
@@ -32,7 +33,8 @@ use Symfony\Component\Workflow\Event\CompletedEvent;
  * @see \Pkg\SyliusEveryPayPlugin\CommandHandler\RefundEveryPayPaymentHandler
  */
 #[AsEventListener(event: 'workflow.sylius_payment.completed.refund')]
-final class RefundEveryPayPaymentListener
+#[WithMonologChannel('everypay')]
+final readonly class RefundEveryPayPaymentListener
 {
     /**
      * @param PaymentRequestFactoryInterface<PaymentRequestInterface> $paymentRequestFactory
@@ -40,12 +42,12 @@ final class RefundEveryPayPaymentListener
      */
     public function __construct(
         #[Autowire(service: 'sylius.factory.payment_request')]
-        private readonly PaymentRequestFactoryInterface $paymentRequestFactory,
+        private PaymentRequestFactoryInterface $paymentRequestFactory,
         #[Autowire(service: 'sylius.repository.payment_request')]
-        private readonly PaymentRequestRepositoryInterface $paymentRequestRepository,
-        private readonly PaymentRequestAnnouncerInterface $paymentRequestAnnouncer,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly LoggerInterface $logger,
+        private PaymentRequestRepositoryInterface $paymentRequestRepository,
+        private PaymentRequestAnnouncerInterface $paymentRequestAnnouncer,
+        private EntityManagerInterface $entityManager,
+        private LoggerInterface $logger,
     ) {
     }
 
