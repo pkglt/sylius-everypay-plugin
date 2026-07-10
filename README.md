@@ -42,6 +42,12 @@ that gap.
 - **Encrypted credentials** - gateway config is encrypted at rest by Sylius
 - Admin form in **English, Lithuanian, Estonian, Latvian**
 
+With the in-shop method buttons enabled, customers pick their bank or card
+without leaving the store (methods grouped by country, the customer's own
+country first):
+
+![In-shop payment method grid](docs/images/method-grid.png)
+
 ## Requirements
 
 | | Version |
@@ -94,6 +100,8 @@ In the Sylius admin: *Payment methods -> Create*, choose the **EveryPay
 | Environment | Demo (`igw-demo.every-pay.com`) or Live (`pay.every-pay.eu`) |
 | Checkout appearance | Redirect to EveryPay (default), or show the payment method buttons in the shop |
 
+![EveryPay gateway configuration form](docs/images/admin-gateway-config.png)
+
 Credentials are verified against the EveryPay API when you save the form -
 a wrong secret or an unknown processing account fails validation with a
 clear message (network problems never block saving).
@@ -144,6 +152,11 @@ Sylius payment-request status flow to settle the payment.
 | Status | customer returns to the shop | payment state re-read from the API, Sylius payment transitioned accordingly |
 | Notify | EveryPay server callback | payment resolved by `payment_reference`, state re-read from the API; non-2xx responses make EveryPay redeliver (6 retries / 72 h) |
 | Refund | admin presses Refund | refund payment request + `POST /v4/payments/refund` inside one transaction; on API failure everything rolls back and the admin sees an error flash |
+
+Every payment row on the admin order page shows the raw EveryPay state and
+the payment reference (and, for live payments, a link to the merchant portal):
+
+![Admin order payments panel](docs/images/admin-order-payments.png)
 
 See [docs/architecture.md](docs/architecture.md) for the full design
 (state mapping table, idempotency and concurrency notes) and
