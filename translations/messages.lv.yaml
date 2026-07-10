@@ -21,3 +21,5 @@ pkg_everypay:
         international: 'Starptautiskie'
         after_payment_note: 'Pēc maksājuma veikšanas jūs atgriezīsieties veikalā.'
         back_to_order: 'Atpakaļ pie pasūtījuma'
+        everypay_state: 'EveryPay statuss'
+        merchant_portal: 'EveryPay tirgotāja portāls'

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Pkg\SyliusEveryPayPlugin\Functional;
 
-use Sylius\Component\Core\Model\AdminUserInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
@@ -20,7 +19,7 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
         $client = static::createClient();
         $this->prepareDatabase();
         $this->createShopEnvironment();
-        $admin = $this->createAdminUser();
+        $admin = $this->shopFixtures()->createAdminUser();
 
         $client->loginUser($admin, 'admin');
 
@@ -49,22 +48,5 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
         // offer to GENERATE a password - the secret is issued by EveryPay.
         self::assertStringContainsString('autocomplete="one-time-code"', $content);
         self::assertStringContainsString('autocomplete="off"', $content);
-    }
-
-    private function createAdminUser(): AdminUserInterface
-    {
-        /** @var AdminUserInterface $admin */
-        $admin = $this->resourceFactory('sylius.factory.admin_user')->createNew();
-        $admin->setUsername('admin');
-        $admin->setEmail('admin@example.com');
-        $admin->setLocaleCode('en_US');
-        $admin->setEnabled(true);
-        $admin->setPlainPassword('irrelevant-password');
-
-        $entityManager = $this->entityManager();
-        $entityManager->persist($admin);
-        $entityManager->flush();
-
-        return $admin;
     }
 }

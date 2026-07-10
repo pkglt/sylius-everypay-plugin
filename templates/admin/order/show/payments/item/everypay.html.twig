@@ -1,0 +1,29 @@
+{# Extra cell on every payment row of the admin order page (the hookable is
+   shared by all gateways); it only carries content for EveryPay payments, so
+   other gateways get an empty cell and the table stays aligned. #}
+{% set payment = hookable_metadata.context.payment %}
+{% set gateway = 'Pkg\\SyliusEveryPayPlugin\\EveryPayGateway' %}
+{% set gateway_config = payment.method is not null ? payment.method.gatewayConfig : null %}
+
+<td class="py-2">
+    {% if gateway_config is not null and gateway_config.factoryName == constant(gateway ~ '::FACTORY_NAME') %}
+        {% set everypay = payment.details[constant(gateway ~ '::DETAILS_KEY')]|default({}) %}
+        {% set reference = everypay['payment_reference']|default('') %}
+        {% if reference != '' %}
+            <div class="small text-secondary" data-test-everypay-state>
+                {{ 'pkg_everypay.ui.everypay_state'|trans }}: {{ everypay['payment_state']|default('-') }}
+            </div>
+            <code class="small d-inline-block text-truncate align-bottom user-select-all"
+                  style="max-width: 11rem;"
+                  title="{{ reference }}"
+                  data-test-everypay-reference>{{ reference }}</code>
+            {% if gateway_config.config['environment']|default('') == constant(gateway ~ '::ENVIRONMENT_LIVE') %}
+                <div class="small">
+                    <a href="{{ constant(gateway ~ '::LIVE_MERCHANT_PORTAL_URL') }}" target="_blank" rel="noopener" data-test-everypay-portal-link>
+                        {{ 'pkg_everypay.ui.merchant_portal'|trans }}
+                    </a>
+                </div>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+</td>

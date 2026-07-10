@@ -9,3 +9,10 @@ sylius_twig_hooks:
                 template: '@PkgSyliusEveryPayPlugin/admin/payment_method/form/sections/gateway_configuration/everypay.html.twig'
                 priority: 0
         'sylius_admin.payment_method.update.content.form.sections.gateway_configuration.everypay': *everypay_gateway_config
+
+        # An extra cell on each payment row of the admin order page: the raw
+        # EveryPay state, the payment reference and (on live) a portal link.
+        'sylius_admin.order.show.content.sections.payments.item':
+            everypay:
+                template: '@PkgSyliusEveryPayPlugin/admin/order/show/payments/item/everypay.html.twig'
+                priority: 150

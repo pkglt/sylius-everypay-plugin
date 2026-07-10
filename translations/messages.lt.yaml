@@ -20,3 +20,5 @@ pkg_everypay:
         international: 'Tarptautiniai'
         after_payment_note: 'Atlikę mokėjimą būsite grąžinti į parduotuvę.'
         back_to_order: 'Grįžti į užsakymą'
+        everypay_state: 'EveryPay būsena'
+        merchant_portal: 'EveryPay pardavėjo portalas'

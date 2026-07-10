@@ -21,3 +21,5 @@ pkg_everypay:
         international: 'Rahvusvahelised'
         after_payment_note: 'Pärast makse sooritamist suunatakse teid tagasi poodi.'
         back_to_order: 'Tagasi tellimuse juurde'
+        everypay_state: 'EveryPay olek'
+        merchant_portal: 'EveryPay kaupmehe portaal'

@@ -51,7 +51,7 @@ params are unauthenticated hints, never trusted):
 | `failed`, `abandoned` | failed | Sylius auto-creates the replacement payment |
 | `voided` | cancelled | |
 | `refunded` | refunded | with the sync workflow context (see above) |
-| `charged_back` | - no-op + `warning` log | handled manually in the merchant portal; the raw state stays visible in payment details |
+| `charged_back` | - no-op + `warning` log | handled manually in the merchant portal; the raw state stays visible on the admin order page |
 
 ## File map
 
@@ -97,8 +97,10 @@ config/services.php                         autowire/autoconfigure prototype ove
 config/services/integrations/sylius_shop.php  shop-only after-pay wiring
 config/config.yaml                          imports config/app/*.yaml (host app imports this)
 config/app/sylius_payment.yaml              gateway validation groups
-config/app/twig_hooks.yaml                  admin form hooks (required - see gotchas)
+config/app/twig_hooks.yaml                  admin form + order panel hooks (see gotchas)
 templates/admin/payment_method/...          gateway credential fields partial
+templates/admin/order/.../everypay.html.twig  per-payment panel on the admin order page
+                                            (raw EveryPay state, reference, portal link)
 templates/shop/method_grid.html.twig        in-shop payment method grid
 translations/{messages,flashes,validators}.{en,lt,et,lv}.yaml
 tests/                                      unit, functional and Behat suites (layout in

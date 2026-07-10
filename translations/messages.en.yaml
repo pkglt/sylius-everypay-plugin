@@ -20,3 +20,5 @@ pkg_everypay:
         international: 'International'
         after_payment_note: 'After completing the payment you will be brought back to the shop.'
         back_to_order: 'Back to the order'
+        everypay_state: 'EveryPay state'
+        merchant_portal: 'EveryPay merchant portal'

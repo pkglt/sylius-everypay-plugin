@@ -49,6 +49,9 @@ final class EveryPayGateway
     /** Sent as integration_details.integration (EveryPay merchant telemetry). */
     public const INTEGRATION_NAME = 'pkglt/sylius-everypay-plugin';
 
+    /** Linked from the admin order panel for live payments. */
+    public const LIVE_MERCHANT_PORTAL_URL = 'https://portal.every-pay.eu/';
+
     /** Sylius stores amounts in cents; the EveryPay API expects a 2-decimal number. */
     public static function amountToDecimal(int $amountInCents): float
     {

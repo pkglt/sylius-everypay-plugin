@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The admin order page shows EveryPay data on each payment row: the raw
+  EveryPay state, the payment reference, and (for live payments) a link
+  to the merchant portal.
 - Gateway log entries go to a dedicated `everypay` Monolog channel, so
   operators can route or filter them independently.
 
