@@ -72,6 +72,7 @@ final class EveryPayGatewayConfigurationType extends AbstractType
                 'choices' => [
                     'pkg_everypay.ui.display_mode_redirect' => EveryPayGateway::DISPLAY_MODE_REDIRECT,
                     'pkg_everypay.ui.display_mode_method_grid' => EveryPayGateway::DISPLAY_MODE_METHOD_GRID,
+                    'pkg_everypay.ui.display_mode_payment_elements' => EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS,
                 ],
                 'empty_data' => EveryPayGateway::DISPLAY_MODE_REDIRECT,
             ]);

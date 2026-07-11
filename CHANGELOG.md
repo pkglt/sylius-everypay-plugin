@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Experimental embedded in-shop checkout via the EveryPay Payment Elements
+  JS SDK: a third "Checkout appearance" choice renders the card / bank /
+  wallet form on a page of the shop (`mobile_payment` one-offs; the card
+  fields stay in EveryPay's iframe, keeping the integration SAQ A). Falls
+  back to the hosted page redirect whenever EveryPay returns no
+  `mobile_access_token` or the SDK fails to load. Built against the SDK
+  contract of EveryPay's own WooCommerce 2.x plugin - the SDK is not yet
+  documented for custom integrations, so the mode is marked experimental.
+
 ## [0.4.0] - 2026-07-10
 
 ### Added

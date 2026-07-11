@@ -78,6 +78,32 @@ final class CapturePaymentRequestTest extends FunctionalTestCase
         self::assertSame('https://spa.example/checkout/thank-you', $this->customerUrlFrom((string) $requests[0]['body']));
     }
 
+    public function testElementsModeCaptureSendsMobilePaymentAndStoresTheToken(): void
+    {
+        static::bootKernel();
+        $this->prepareDatabase();
+        $paymentRequest = $this->createCapturePaymentRequest(displayMode: EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS);
+
+        $this->everyPayHttpMock()->queueJson([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+            'payment_state' => 'initial',
+            'mobile_access_token' => 'mobile-access-token-123',
+        ], 201);
+
+        $this->commandBus()->dispatch(new CaptureEveryPayPayment($paymentRequest->getId()));
+
+        $requests = $this->everyPayHttpMock()->recordedRequests();
+        self::assertCount(1, $requests);
+        self::assertStringContainsString('"mobile_payment":true', (string) $requests[0]['body']);
+
+        self::assertSame(PaymentRequestInterface::STATE_PROCESSING, $paymentRequest->getState());
+        $elements = $paymentRequest->getResponseData()['payment_elements'] ?? null;
+        self::assertIsArray($elements);
+        self::assertSame('mobile-access-token-123', $elements['mobile_access_token']);
+        self::assertSame($this->customerUrlFrom((string) $requests[0]['body']), $elements['customer_url']);
+    }
+
     public function testApiFailureFailsPaymentRequestAndPaymentWithoutThrowing(): void
     {
         static::bootKernel();
@@ -96,10 +122,17 @@ final class CapturePaymentRequestTest extends FunctionalTestCase
         self::assertArrayHasKey('error', $paymentRequest->getResponseData());
     }
 
-    private function createCapturePaymentRequest(): PaymentRequestInterface
+    private function createCapturePaymentRequest(?string $displayMode = null): PaymentRequestInterface
     {
         $channel = $this->createShopEnvironment();
         $method = $this->createEveryPayPaymentMethod($channel);
+        if (null !== $displayMode) {
+            $gatewayConfig = $method->getGatewayConfig();
+            self::assertNotNull($gatewayConfig);
+            $gatewayConfig->setConfig(array_merge($gatewayConfig->getConfig(), [
+                EveryPayGateway::CONFIG_DISPLAY_MODE => $displayMode,
+            ]));
+        }
         $payment = $this->createOrderWithPayment($channel, $method);
 
         /** @var PaymentRequestFactoryInterface<PaymentRequestInterface> $factory */

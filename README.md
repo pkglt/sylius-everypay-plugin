@@ -98,7 +98,7 @@ In the Sylius admin: *Payment methods -> Create*, choose the **EveryPay
 | API username / API secret | EveryPay merchant portal -> *Merchant settings -> General* |
 | Processing account | e.g. `EUR3D1` - shown in the portal; fixes the currency and available methods |
 | Environment | Demo (`igw-demo.every-pay.com`) or Live (`pay.every-pay.eu`) |
-| Checkout appearance | Redirect to EveryPay (default), or show the payment method buttons in the shop |
+| Checkout appearance | Redirect to EveryPay (default), show the payment method buttons in the shop, or the experimental embedded checkout (see the [roadmap](#roadmap)) |
 
 ![EveryPay gateway configuration form](docs/images/admin-gateway-config.png)
 
@@ -203,7 +203,10 @@ This repository is set up for AI-agent-assisted development - see
 - Embedded in-shop checkout via the EveryPay **Payment Elements** JS SDK - the
   element EveryPay's own platform plugins mount in-page (`mobile_payment`
   one-offs, hosted iframe card form, SAQ A per EveryPay's PCI classification).
-  Blocked until EveryPay confirms/documents the SDK for custom integrations -
+  **Implemented as the experimental `payment_elements` display mode**, built
+  against the reverse-engineered contract of EveryPay's own WooCommerce 2.x
+  plugin; stays experimental (with an automatic hosted-page fallback) until
+  EveryPay confirms/documents the SDK for custom integrations -
   see [docs/everypay-api.md](docs/everypay-api.md#payment-elements-embedded-checkout)
 - In-shop **Apple Pay / Google Pay buttons** - both wallets already work on the
   hosted payment page with no plugin changes (enable them on the processing
