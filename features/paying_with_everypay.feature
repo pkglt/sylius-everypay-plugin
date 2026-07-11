@@ -59,3 +59,16 @@ Feature: Paying with EveryPay
         Then the customer sees the bank buttons instead of being redirected
         And the payment page reads as part of the checkout
         And the bank buttons are grouped by country, the customer's country first
+
+    Scenario: Paying inside the shop with the embedded checkout
+        Given the EveryPay payment method uses the embedded checkout
+        And EveryPay will accept the payment creation with a mobile access token
+        When the customer proceeds to pay
+        Then the customer sees the embedded checkout instead of being redirected
+        And the payment page reads as part of the checkout
+
+    Scenario: The embedded checkout falls back to the hosted page without a token
+        Given the EveryPay payment method uses the embedded checkout
+        And EveryPay will accept the payment creation
+        When the customer proceeds to pay
+        Then the customer is redirected to the EveryPay payment page

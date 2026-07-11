@@ -147,12 +147,19 @@ source of truth.
   fails saves only on definitive rejections (401/403/404 from
   /v4/processing_accounts); transport errors and 5xx never block - trust
   admin data when it cannot be verified.
-- The in-shop method grid is opt-in via gateway config `display_mode`
-  (`EveryPayGateway::DISPLAY_MODE_*`); the capture handler stores sanitized
-  `payment_methods` (only entries with a per-method payment_link) in the
-  payment request responseData, and EveryPayHttpResponseProvider renders
-  templates/shop/method_grid.html.twig instead of redirecting. Always keep
-  the redirect fallback - EveryPay may return no per-method links.
+- The in-shop method grid and the embedded checkout are opt-in via gateway
+  config `display_mode` (`EveryPayGateway::DISPLAY_MODE_*`); the capture
+  handler stores sanitized `payment_methods` (only entries with a per-method
+  payment_link) - and, for the embedded checkout, a `payment_elements` blob
+  (mobile_access_token + SDK options) - in the payment request responseData,
+  and EveryPayHttpResponseProvider renders
+  templates/shop/method_grid.html.twig or
+  templates/shop/payment_elements.html.twig instead of redirecting. Always
+  keep the redirect fallback - EveryPay may return no per-method links and
+  no mobile_access_token. The Payment Elements mode is **experimental**: the
+  SDK is undocumented for custom integrations; the reverse-engineered
+  contract lives in docs/everypay-api.md and must not be extended without
+  re-verifying against EveryPay's own WooCommerce plugin or their answer.
 - `EveryPayGateway` holds all shared constants (factory name, config keys,
   base URLs, payment-details helpers). Don't scatter string literals.
 - **The after-pay URL is a seam** (`Provider/AfterPayUrlProviderInterface`):
@@ -200,7 +207,9 @@ source of truth.
 ## Roadmap (see README)
 
 Partial refunds via `sylius/refund-plugin` (adoption path documented in
-`docs/architecture.md` - the workflow listener must be guarded when adopted),
-tokenized/CIT payments, and embedded in-shop checkout via the EveryPay
-Payment Elements JS SDK (blocked on EveryPay confirming/documenting it for
-custom integrations - see docs/everypay-api.md).
+`docs/architecture.md` - the workflow listener must be guarded when adopted)
+and tokenized/CIT payments. The embedded in-shop checkout via the EveryPay
+Payment Elements JS SDK is implemented as the experimental `payment_elements`
+display mode - built against the reverse-engineered contract of EveryPay's
+own WooCommerce 2.x plugin, awaiting EveryPay's confirmation for custom
+integrations (see docs/everypay-api.md).
