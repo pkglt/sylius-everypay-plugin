@@ -7,7 +7,6 @@ namespace Pkg\SyliusEveryPayPlugin\Provider;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Sylius\Bundle\PaymentBundle\Provider\HttpResponseProviderInterface;
 use Sylius\Bundle\ResourceBundle\Controller\RequestConfiguration;
-use Sylius\Component\Payment\Model\GatewayConfigInterface;
 use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
@@ -18,11 +17,14 @@ use Twig\Environment;
 
 /**
  * After the capture handler created the EveryPay payment, sends the customer
- * to the hosted payment page - or, when the gateway is configured with the
- * method grid, renders the payment method buttons (per-method direct links)
- * inside the shop first. When it does not support the request (capture
- * failed, or the payment already reached a final state), Sylius falls back
- * to /after-pay/{hash} -> status check -> thank-you/retry.
+ * to the hosted payment page - or, depending on the configured display mode,
+ * renders the payment method buttons (per-method direct links) or the
+ * embedded Payment Elements checkout inside the shop instead. Whenever the
+ * configured mode cannot render (no per-method links, no mobile access
+ * token), the hosted page redirect stays as the fallback. When it does not
+ * support the request (capture failed, or the payment already reached a
+ * final state), Sylius falls back to /after-pay/{hash} -> status check ->
+ * thank-you/retry.
  *
  * The request argument is typed Request|RequestConfiguration because Sylius
  * 2.3 swapped RequestConfiguration for Request in the interface; the widened
@@ -39,6 +41,7 @@ final readonly class EveryPayHttpResponseProvider implements HttpResponseProvide
     public function __construct(
         private Environment $twig,
         private MethodGridViewFactory $methodGrid,
+        private PaymentElementsViewFactory $paymentElements,
     ) {
     }
 
@@ -73,8 +76,18 @@ final readonly class EveryPayHttpResponseProvider implements HttpResponseProvide
         /** @var string $paymentLink */
         $paymentLink = $responseData['payment_link'];
 
+        $displayMode = EveryPayGateway::displayModeFor($paymentRequest);
+
+        if (EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS === $displayMode) {
+            $view = $this->paymentElements->viewFrom($paymentRequest);
+            if (null !== $view) {
+                return new Response($this->twig->render('@PkgSyliusEveryPayPlugin/shop/payment_elements.html.twig', $view));
+            }
+            // EveryPay returned no usable elements data: redirect below.
+        }
+
         $methodOptions = $this->methodGrid->optionsFrom($responseData['payment_methods'] ?? null);
-        if ([] !== $methodOptions && EveryPayGateway::DISPLAY_MODE_METHOD_GRID === $this->displayModeFor($paymentRequest)) {
+        if ([] !== $methodOptions && EveryPayGateway::DISPLAY_MODE_METHOD_GRID === $displayMode) {
             $payment = EveryPayGateway::corePaymentFrom($paymentRequest);
             $preferredCountry = $payment->getOrder()?->getBillingAddress()?->getCountryCode();
 
@@ -87,15 +100,5 @@ final readonly class EveryPayHttpResponseProvider implements HttpResponseProvide
         }
 
         return new RedirectResponse($paymentLink, Response::HTTP_SEE_OTHER);
-    }
-
-    private function displayModeFor(PaymentRequestInterface $paymentRequest): string
-    {
-        $gatewayConfig = $paymentRequest->getMethod()->getGatewayConfig();
-        if (!$gatewayConfig instanceof GatewayConfigInterface) {
-            return EveryPayGateway::DISPLAY_MODE_REDIRECT;
-        }
-
-        return EveryPayGateway::displayModeFrom($gatewayConfig->getConfig());
     }
 }
