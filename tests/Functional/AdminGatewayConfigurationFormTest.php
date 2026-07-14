@@ -31,12 +31,17 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
         self::assertResponseIsSuccessful();
         $content = (string) $client->getResponse()->getContent();
 
-        foreach (['api_username', 'api_secret', 'account_name', 'environment'] as $field) {
+        foreach (['api_username', 'api_secret', 'account_name', 'environment', 'display_mode'] as $field) {
             self::assertStringContainsString(
                 sprintf('[gatewayConfig][config][%s]', $field),
                 $content,
                 sprintf('The "%s" gateway field is missing - is the gateway_configuration.everypay twig hook loaded?', $field),
             );
+        }
+
+        // All three checkout appearances are offered.
+        foreach (['redirect', 'method_grid', 'payment_elements'] as $displayMode) {
+            self::assertStringContainsString(sprintf('value="%s"', $displayMode), $content);
         }
 
         // Labels prove the plugin translations are wired into the form.

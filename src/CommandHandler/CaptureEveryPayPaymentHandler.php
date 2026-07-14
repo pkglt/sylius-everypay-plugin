@@ -84,11 +84,18 @@ final readonly class CaptureEveryPayPaymentHandler
             ]);
         }
 
+        $displayMode = EveryPayGateway::displayModeFor($paymentRequest);
+
+        $payload = $this->payloadFactory->create($payment, $customerUrl);
+        if (EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS === $displayMode) {
+            // The embedded checkout rides on the same oneoff: mobile_payment
+            // makes the response carry the mobile_access_token the Payment
+            // Elements SDK consumes.
+            $payload['mobile_payment'] = true;
+        }
+
         try {
-            $response = $this->apiClient->createOneOffPayment(
-                $credentials,
-                $this->payloadFactory->create($payment, $customerUrl),
-            );
+            $response = $this->apiClient->createOneOffPayment($credentials, $payload);
         } catch (EveryPayApiException $e) {
             $this->logger->error('EveryPay one-off payment creation failed.', [
                 'payment_id' => $payment->getId(),
@@ -123,13 +130,39 @@ final readonly class CaptureEveryPayPaymentHandler
         ];
         $payment->setDetails($details);
 
-        $paymentRequest->setResponseData([
+        $responseData = [
             'payment_link' => $paymentLink,
             'payment_reference' => $paymentReference,
             // Per-method direct links (bank buttons) for the optional
             // in-shop method grid; empty when EveryPay returns none.
             'payment_methods' => $this->methodGrid->optionsFrom($response['payment_methods'] ?? null),
-        ]);
+        ];
+
+        if (EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS === $displayMode) {
+            $mobileAccessToken = $response['mobile_access_token'] ?? null;
+            if (is_string($mobileAccessToken) && '' !== $mobileAccessToken) {
+                // Everything the embedded checkout page needs beyond the
+                // gateway config: the SDK options mirror the oneoff payload
+                // just sent, the rest feeds confirm()'s payment intent.
+                $responseData['payment_elements'] = [
+                    'mobile_access_token' => $mobileAccessToken,
+                    'customer_url' => $customerUrl,
+                    'order_reference' => $payload['order_reference'],
+                    'amount' => $payload['amount'],
+                    'locale' => $payload['locale'],
+                    'email' => $payload['email'] ?? null,
+                    'preferred_country' => $payload['preferred_country'] ?? null,
+                ];
+            } else {
+                // Keep the attempt alive - EveryPayHttpResponseProvider falls
+                // back to the hosted page redirect without this key.
+                $this->logger->warning('EveryPay returned no mobile_access_token for the embedded checkout - falling back to the hosted page redirect.', [
+                    'payment_id' => $payment->getId(),
+                ]);
+            }
+        }
+
+        $paymentRequest->setResponseData($responseData);
 
         // The payment intentionally stays in `new`: PaymentToPayResolver only
         // re-enters the pay flow for `new` payments, so a customer who bounces

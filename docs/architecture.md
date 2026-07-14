@@ -15,7 +15,7 @@ command on the synchronous `sylius.payment_request.command_bus`.
 
 | Flow | Trigger | Chain |
 |---|---|---|
-| **Capture** | customer completes checkout -> `GET /order/{token}/pay` -> Sylius creates PR(action=capture) -> redirect `/payment-request/pay/{hash}` | `EveryPayCommandProvider` -> `CaptureEveryPayPaymentHandler`: first takes a **pessimistic row lock** on the PR (`$em->refresh($pr, PESSIMISTIC_WRITE)`, transaction supplied by the bus' `doctrine_transaction` middleware) - concurrent `/pay/{hash}` requests (double-click, browser retry) serialize instead of both creating an EveryPay payment for the same `order_reference` and the loser wrongly failing the payment. Then: builds the oneoff payload (`EveryPayOneOffPayloadFactory`), `POST /v4/payments/oneoff`, stores `payment_reference`+`payment_link` in `payment.details['everypay']` and PR responseData, PR -> processing. Then `EveryPayHttpResponseProvider` redirects the customer to `payment_link` (303). API failure: PR + payment -> failed, **no exception** - Sylius falls back to after-pay, the customer gets a failed flash and Sylius auto-creates a fresh `new` payment for retry. |
+| **Capture** | customer completes checkout -> `GET /order/{token}/pay` -> Sylius creates PR(action=capture) -> redirect `/payment-request/pay/{hash}` | `EveryPayCommandProvider` -> `CaptureEveryPayPaymentHandler`: first takes a **pessimistic row lock** on the PR (`$em->refresh($pr, PESSIMISTIC_WRITE)`, transaction supplied by the bus' `doctrine_transaction` middleware) - concurrent `/pay/{hash}` requests (double-click, browser retry) serialize instead of both creating an EveryPay payment for the same `order_reference` and the loser wrongly failing the payment. Then: builds the oneoff payload (`EveryPayOneOffPayloadFactory`; with the embedded checkout configured, `mobile_payment: true` is added), `POST /v4/payments/oneoff`, stores `payment_reference`+`payment_link` in `payment.details['everypay']` and PR responseData (plus, for the embedded checkout, a `payment_elements` blob with the `mobile_access_token` and the SDK options mirroring the payload), PR -> processing. Then `EveryPayHttpResponseProvider` redirects the customer to `payment_link` (303) - or renders the method grid / the embedded checkout, per the configured display mode. API failure: PR + payment -> failed, **no exception** - Sylius falls back to after-pay, the customer gets a failed flash and Sylius auto-creates a fresh `new` payment for retry. |
 | **Status** (customer return) | EveryPay redirects to `customer_url` = `/order/after-pay/{hash}` -> Sylius clones the PR as action=status | `StatusEveryPayPaymentHandler` -> `EveryPayPaymentSynchronizer` (below). An API failure is swallowed (PR -> failed): the payment stays processing, callbacks settle it later. |
 | **Notify** (server callback) | EveryPay hits `/payment-methods/{code}?payment_reference=...&event_name=...` (static URL configured in the merchant portal) | Sylius `PaymentMethodNotifyAction` -> `EveryPayNotifyPaymentProvider` resolves the Payment (`details LIKE '%<hex payment reference>%'`, scoped to the method; malformed -> 400, unknown -> 404, both side-effect-free) -> PR(action=notify) -> `NotifyEveryPayPaymentHandler` -> synchronizer. An API failure **propagates** -> non-2xx response -> EveryPay redelivers (6 retries / 72 h). Success -> 204. |
 | **Refund** (admin) | Core admin Refund button applies the `sylius_payment` `refund` transition -> `workflow.sylius_payment.completed.refund` event | `RefundEveryPayPaymentListener` (guards: core payment, everypay factory, not synchronizer-initiated) wraps *create PR(refund) + announce* in an explicit DBAL transaction. `RefundEveryPayPaymentHandler` calls `POST /v4/payments/refund` (full amount). Failure -> rollback + `UpdateHandlingException('everypay_refund_failed')` -> the resource controller shows the error flash and **never flushes** - the DB keeps the payment `completed`. |
@@ -85,10 +85,14 @@ src/
 |   |-- PayloadAfterPayUrlProvider.php      headless default: URL from the payload only
 |   |-- SyliusShopAfterPayUrlProvider.php   payload first, shop after-pay route fallback
 |   |                                       (wired only when SyliusShopBundle is present)
-|   |-- EveryPayHttpResponseProvider.php    redirect to payment_link or render the method
-|   |                                       grid (guards: capture action, PR processing,
-|   |                                       payment new/processing)
+|   |-- EveryPayHttpResponseProvider.php    redirect to payment_link, or render the method
+|   |                                       grid / embedded checkout (guards: capture action,
+|   |                                       PR processing, payment new/processing; missing
+|   |                                       grid links or elements data -> redirect fallback)
 |   |-- MethodGridViewFactory.php           oneoff payment_methods -> grid options/groups
+|   |-- PaymentElementsViewFactory.php      responseData + gateway config -> embedded
+|   |                                       checkout template context (SDK URL, setup,
+|   |                                       confirm() payment intent); null -> redirect
 |   `-- EveryPayNotifyPaymentProvider.php   callback -> Payment resolution
 |-- Form/EveryPayGatewayConfigurationType.php   admin config form (5 fields)
 |-- Validator/Constraints/ValidEveryPayCredentials{,Validator}.php  credential check on save
@@ -103,6 +107,8 @@ templates/admin/payment_method/...          gateway credential fields partial
 templates/admin/order/.../everypay.html.twig  per-payment panel on the admin order page
                                             (raw EveryPay state, reference, portal link)
 templates/shop/method_grid.html.twig        in-shop payment method grid
+templates/shop/payment_elements.html.twig   embedded checkout (Payment Elements SDK;
+                                            experimental - see everypay-api.md)
 translations/{messages,flashes,validators}.{en,lt,et,lv}.yaml
 tests/                                      unit, functional and Behat suites (layout in
                                             AGENTS.md)
@@ -140,10 +146,16 @@ No DB migration: only core entities (`sylius_payment`,
 
 - One command set, display modes as data: the Stripe plugin splits
   Checkout/WebElements into separate command namespaces because those are
-  different API flows. EveryPay's redirect and method grid (and the planned
-  Payment Elements mode) share the same oneoff flow and differ only in how
-  the customer reaches the payment page - so `display_mode` stays gateway
-  config, not a namespace.
+  different API flows. EveryPay's redirect, method grid and Payment Elements
+  modes share the same oneoff flow and differ only in how the customer
+  reaches the payment page - so `display_mode` stays gateway config, not a
+  namespace.
+- The Payment Elements mode is **experimental**: the SDK is undocumented for
+  custom integrations (docs/everypay-api.md#payment-elements-embedded-checkout
+  records the reverse-engineered contract; EveryPay's WooCommerce 2.x plugin
+  is the reference). Until EveryPay confirms it, its template/JS and the
+  `payment_elements` responseData blob are exempt from the stability
+  contract below, and every render path keeps the hosted redirect fallback.
 - Notify resolution keeps the DQL `LIKE`: `JSON_EXTRACT` is not portable
   across MySQL/MariaDB/PostgreSQL/SQLite in DQL, and a dedicated indexed
   column would force the migration this plugin deliberately avoids. The
