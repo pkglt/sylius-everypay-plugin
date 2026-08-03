@@ -11,6 +11,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
@@ -74,6 +75,12 @@ final class EveryPayGatewayConfigurationType extends AbstractType
                     'pkg_everypay.ui.display_mode_method_grid' => EveryPayGateway::DISPLAY_MODE_METHOD_GRID,
                 ],
                 'empty_data' => EveryPayGateway::DISPLAY_MODE_REDIRECT,
+            ])
+            ->add(EveryPayGateway::CONFIG_MERCHANT_PORTAL_URL, UrlType::class, [
+                'label' => 'pkg_everypay.ui.merchant_portal_url',
+                'help' => 'pkg_everypay.ui.merchant_portal_url_help',
+                'required' => false,
+                'default_protocol' => 'https',
             ]);
 
         // A password input never re-renders its stored value, so an untouched

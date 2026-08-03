@@ -14,6 +14,8 @@ pkg_everypay:
         display_mode_help: 'Makseviiside vaade näitab panga- ja kaardinuppe poes; klient suunatakse otse oma panga makselehele.'
         display_mode_redirect: 'Suuna EveryPay makselehele'
         display_mode_method_grid: 'Näita makseviiside nuppe poes'
+        merchant_portal_url: 'Kaupmehe portaali aadress'
+        merchant_portal_url_help: 'Valikuline. Pangad pakuvad kaupmehe portaali oma aadressil (nt SEB: https://portal.ecommerce.sebgroup.com); halduslehed viitavad sinna standardse EveryPay portaali asemel.'
         choose_payment_method: 'Valige makseviis'
         all_payment_options: 'Kõik makseviisid EveryPay lehel'
         pay_for_order: 'Tellimuse %number% makse'

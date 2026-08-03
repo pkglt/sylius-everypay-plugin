@@ -31,7 +31,7 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
         self::assertResponseIsSuccessful();
         $content = (string) $client->getResponse()->getContent();
 
-        foreach (['api_username', 'api_secret', 'account_name', 'environment'] as $field) {
+        foreach (['api_username', 'api_secret', 'account_name', 'environment', 'merchant_portal_url'] as $field) {
             self::assertStringContainsString(
                 sprintf('[gatewayConfig][config][%s]', $field),
                 $content,
@@ -41,6 +41,7 @@ final class AdminGatewayConfigurationFormTest extends FunctionalTestCase
 
         // Labels prove the plugin translations are wired into the form.
         self::assertStringContainsString('Processing account', $content);
+        self::assertStringContainsString('Merchant portal address', $content);
         self::assertStringContainsString('leave empty to keep the currently stored secret', $content);
 
         // Browsers must neither save/autofill the credential pair (an

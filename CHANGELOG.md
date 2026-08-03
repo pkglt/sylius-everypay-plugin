@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optional "Merchant portal address" field on the gateway configuration:
+  acquiring banks white-label the EveryPay merchant portal under their own
+  address (e.g. SEB's `portal.ecommerce.sebgroup.com`), and the admin order
+  page now links live payments to the configured address. Empty keeps the
+  standard `portal.every-pay.eu` link.
+
 ### Fixed
 
 - `payment_description` (the bank-statement text for Open Banking payments)

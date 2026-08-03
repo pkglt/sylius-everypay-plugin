@@ -13,6 +13,8 @@ pkg_everypay:
         display_mode_help: 'Mokėjimo būdų tinklelis rodo bankų ir kortelių mygtukus parduotuvėje; pirkėjas nukreipiamas tiesiai į savo banko mokėjimo puslapį.'
         display_mode_redirect: 'Nukreipti į EveryPay mokėjimo puslapį'
         display_mode_method_grid: 'Rodyti mokėjimo būdų mygtukus parduotuvėje'
+        merchant_portal_url: 'Pardavėjo portalo adresas'
+        merchant_portal_url_help: 'Neprivaloma. Bankai pardavėjo portalą teikia savo adresu (pvz., SEB: https://portal.ecommerce.sebgroup.com); administravimo puslapiai nukreips ten, o ne į standartinį EveryPay portalą.'
         choose_payment_method: 'Pasirinkite mokėjimo būdą'
         all_payment_options: 'Visi mokėjimo būdai EveryPay puslapyje'
         pay_for_order: 'Užsakymo %number% apmokėjimas'

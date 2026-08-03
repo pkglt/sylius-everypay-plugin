@@ -63,9 +63,12 @@ abstract class FunctionalTestCase extends WebTestCase
         return $this->shopFixtures()->createShopEnvironment();
     }
 
-    protected function createEveryPayPaymentMethod(ChannelInterface $channel, string $code = 'everypay'): PaymentMethodInterface
+    /**
+     * @param array<string, mixed> $gatewayConfigOverrides merged over the default gateway config
+     */
+    protected function createEveryPayPaymentMethod(ChannelInterface $channel, string $code = 'everypay', array $gatewayConfigOverrides = []): PaymentMethodInterface
     {
-        return $this->shopFixtures()->createEveryPayPaymentMethod($channel, $code);
+        return $this->shopFixtures()->createEveryPayPaymentMethod($channel, $code, $gatewayConfigOverrides);
     }
 
     /**
