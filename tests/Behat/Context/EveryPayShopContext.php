@@ -34,6 +34,8 @@ final class EveryPayShopContext implements Context
 
     private const PAYMENT_LINK = 'https://igw-demo.every-pay.com/lp/x419d7/3HeCGV01';
 
+    private const MOBILE_ACCESS_TOKEN = 'mobile-access-token-123';
+
     private ?ChannelInterface $channel = null;
 
     private ?PaymentMethodInterface $paymentMethod = null;
@@ -150,6 +152,45 @@ final class EveryPayShopContext implements Context
                 ],
             ],
         ], 201);
+    }
+
+    #[Given('the EveryPay payment method uses the embedded checkout')]
+    public function theEveryPayPaymentMethodUsesTheEmbeddedCheckout(): void
+    {
+        Assert::notNull($this->paymentMethod);
+        $gatewayConfig = $this->paymentMethod->getGatewayConfig();
+        Assert::notNull($gatewayConfig);
+        $gatewayConfig->setConfig(array_merge($gatewayConfig->getConfig(), [
+            EveryPayGateway::CONFIG_DISPLAY_MODE => EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS,
+        ]));
+        $this->entityManager->flush();
+    }
+
+    #[Given('EveryPay will accept the payment creation with a mobile access token')]
+    public function everyPayWillAcceptThePaymentCreationWithAMobileAccessToken(): void
+    {
+        $this->everyPayApi->queueJson([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+            'payment_state' => 'initial',
+            'order_reference' => '000000001-1',
+            'account_name' => 'EUR3D1',
+            'currency' => 'EUR',
+            'mobile_access_token' => self::MOBILE_ACCESS_TOKEN,
+        ], 201);
+    }
+
+    #[Then('the customer sees the embedded checkout instead of being redirected')]
+    public function theCustomerSeesTheEmbeddedCheckoutInsteadOfBeingRedirected(): void
+    {
+        Assert::null($this->externalRedirectUrl, 'Expected the embedded checkout, got an external redirect.');
+        Assert::true($this->client->getResponse()->isSuccessful());
+
+        $content = (string) $this->client->getResponse()->getContent();
+        Assert::contains($content, 'data-test-everypay-payment-elements');
+        Assert::contains($content, '/payment_elements/everypay-sdk-v1-0-0.umd.js');
+        Assert::contains($content, self::MOBILE_ACCESS_TOKEN);
+        Assert::contains($content, 'data-test-everypay-hosted-page-link');
     }
 
     #[Then('the customer sees the bank buttons instead of being redirected')]

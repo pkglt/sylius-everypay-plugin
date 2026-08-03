@@ -1,0 +1,118 @@
+{% extends '@SyliusShop/shared/layout/base.html.twig' %}
+
+{% import '@SyliusShop/shared/macro/money.html.twig' as money %}
+
+{% block title %}{{ 'pkg_everypay.ui.choose_payment_method'|trans }} | {{ parent() }}{% endblock %}
+
+{% block content %}
+    {% set order = payment.order %}
+    <div class="container my-5" style="max-width: 40rem;" data-test-everypay-payment-elements>
+        <div class="mb-4">
+            <h1 class="h2 mb-1">{{ 'pkg_everypay.ui.choose_payment_method'|trans }}</h1>
+            <p class="text-body-secondary mb-1">
+                {{ 'pkg_everypay.ui.pay_for_order'|trans({'%number%': order.number}) }}
+            </p>
+            <p class="fs-4 fw-bold mb-0" data-test-everypay-amount-due>
+                {{ 'pkg_everypay.ui.amount_due'|trans }}: {{ money.format(payment.amount, payment.currencyCode) }}
+            </p>
+        </div>
+
+        {# The EveryPay iframe (card form, bank list, wallet buttons) mounts here. #}
+        <div id="everypay-payment-element" class="mb-3" data-test-everypay-elements-mount></div>
+
+        <div class="alert alert-danger d-none" role="alert" data-everypay-elements-error data-test-everypay-elements-error></div>
+
+        <button type="button" class="btn btn-primary btn-lg w-100" disabled
+                data-everypay-elements-pay data-test-everypay-elements-pay>
+            {{ 'pkg_everypay.ui.pay_now'|trans }}
+        </button>
+
+        <p class="text-body-secondary mt-4 mb-2">{{ 'pkg_everypay.ui.after_payment_note'|trans }}</p>
+        <p class="mb-1">
+            <a href="{{ payment_link }}" data-test-everypay-hosted-page-link>
+                {{ 'pkg_everypay.ui.all_payment_options'|trans }}
+            </a>
+        </p>
+        <p class="mb-0">
+            <a href="{{ path('sylius_shop_order_show', {'tokenValue': order.tokenValue}) }}" data-test-everypay-back-to-order>
+                {{ 'pkg_everypay.ui.back_to_order'|trans }}
+            </a>
+        </p>
+    </div>
+
+    {# The HEX flags keep '</script>' and quote characters impossible inside the JSON island. #}
+    <script type="application/json" data-everypay-elements-config>{{ elements|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT'))|raw }}</script>
+    <script src="{{ sdk_url }}"></script>
+    <script>
+        (function () {
+            'use strict';
+
+            var config = JSON.parse(document.querySelector('[data-everypay-elements-config]').textContent);
+            var payButton = document.querySelector('[data-everypay-elements-pay]');
+            var errorBox = document.querySelector('[data-everypay-elements-error]');
+            var genericError = {{ 'pkg_everypay.ui.payment_elements_failed'|trans|json_encode|raw }};
+            var element = null;
+
+            function showError(message) {
+                errorBox.textContent = (typeof message === 'string' && message !== '') ? message : genericError;
+                errorBox.classList.remove('d-none');
+            }
+
+            // The hosted payment page covers everything the embedded element
+            // does - when the SDK cannot load or mount (CSP, network, an SDK
+            // change), hand the customer over instead of leaving a dead page.
+            function fallbackToHostedPage() {
+                window.location.replace(config.payment_intent.paymentLink);
+            }
+
+            payButton.addEventListener('click', function () {
+                payButton.disabled = true;
+                errorBox.classList.add('d-none');
+
+                element.submit().then(function (result) {
+                    if (result && result.error) {
+                        showError(result.error);
+                        payButton.disabled = false;
+
+                        return;
+                    }
+
+                    // confirm() always ends in a top-window redirect (back to
+                    // the shop, or into a 3DS challenge first).
+                    return element.confirm(config.payment_intent);
+                }).catch(function () {
+                    showError(null);
+                    payButton.disabled = false;
+                });
+            });
+
+            if (typeof EveryPay === 'undefined') {
+                fallbackToHostedPage();
+
+                return;
+            }
+
+            try {
+                var setup = config.setup;
+                var options = {
+                    stylingOptions: { theme: 'light', layout: 'tabs' },
+                    amount: setup.amount,
+                    locale: setup.locale,
+                    environment: setup.environment
+                };
+                if (setup.preferred_country) { options.preferredCountry = setup.preferred_country; }
+                if (setup.email) { options.email = setup.email; }
+
+                element = new EveryPay({ account: setup.account_name, username: setup.api_username })
+                    .secureElements(options)
+                    .build({ element: 'payment' });
+
+                element.mount('#everypay-payment-element').then(function () {
+                    payButton.disabled = false;
+                }, fallbackToHostedPage);
+            } catch (error) {
+                fallbackToHostedPage();
+            }
+        })();
+    </script>
+{% endblock %}
