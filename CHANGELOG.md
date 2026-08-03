@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `payment_description` (the bank-statement text for Open Banking payments)
+  transliterates letters with diacritics to their ASCII base instead of
+  deleting them, so a shop name like "Žąsų ūkis" reaches the customer's
+  statement as "Zasu ukis" rather than "s kis". Characters with no ASCII
+  transliteration are still stripped to the SEPA charset EveryPay accepts.
+  `symfony/string` is now a direct dependency (it was already installed
+  transitively).
+
 ## [0.4.0] - 2026-07-10
 
 ### Added

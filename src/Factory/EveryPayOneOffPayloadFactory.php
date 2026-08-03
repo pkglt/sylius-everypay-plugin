@@ -10,6 +10,7 @@ use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use function Symfony\Component\String\u;
 
 /**
  * Builds the business fields of a POST /v4/payments/oneoff request from a
@@ -94,11 +95,14 @@ final readonly class EveryPayOneOffPayloadFactory
     /**
      * Bank-statement text for Open Banking payments: "{channel} order {number}",
      * reduced to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] - the
-     * SEPA set, so diacritics are stripped) and capped at 65 characters.
+     * SEPA set) and capped at 65 characters. Letters with diacritics are
+     * transliterated to their ASCII base first; deleting them outright would
+     * garble the shop name on the customer's statement.
      */
     private function paymentDescription(OrderInterface $order): string
     {
         $text = sprintf('%s order %s', (string) $order->getChannel()?->getName(), (string) $order->getNumber());
+        $text = u($text)->ascii()->toString();
         $text = (string) preg_replace("#[^a-zA-Z0-9/?:().,'+ -]#", '', $text);
         $text = trim((string) preg_replace('/\s+/', ' ', $text));
 

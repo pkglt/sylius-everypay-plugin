@@ -43,8 +43,8 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame('client@example.com', $payload['email']);
         self::assertSame('203.0.113.7', $payload['customer_ip']);
         self::assertSame('LT', $payload['preferred_country']);
-        // Diacritics are outside the SEPA statement charset and get stripped.
-        self::assertSame('Knyg namai order 000123', $payload['payment_description']);
+        // Diacritics are outside the SEPA statement charset and get transliterated.
+        self::assertSame('Knygu namai order 000123', $payload['payment_description']);
         self::assertSame('Kaunas', $payload['billing_city']);
         self::assertSame('LT', $payload['billing_country']);
         self::assertSame('Savanorių pr. 1', $payload['billing_line1']);
@@ -89,6 +89,30 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame('Berlin', $payload['billing_city']);
         // No channel stubbed: the description degrades to the order number.
         self::assertSame('order 000009', $payload['payment_description']);
+    }
+
+    public function testPaymentDescriptionTransliteratesDiacriticsAndStripsTheRest(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000042',
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: null,
+                shippingAddress: null,
+                // Baltic diacritics transliterate to their ASCII base; the
+                // ampersand has no transliteration and is stripped, with the
+                // leftover whitespace collapsed.
+                channelName: 'Žąsų ūkis & Māja Öö',
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame('Zasu ukis Maja Oo order 000042', $payload['payment_description']);
     }
 
     public function testPaymentDescriptionIsCappedAtSixtyFiveCharacters(): void
