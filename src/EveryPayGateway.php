@@ -28,6 +28,14 @@ final class EveryPayGateway
 
     public const CONFIG_DISPLAY_MODE = 'display_mode';
 
+    /**
+     * Optional: the merchant portal address linked from the admin order page.
+     * Acquiring banks white-label the EveryPay portal under their own domain,
+     * so the right address depends on who issued the credentials; empty falls
+     * back to LIVE_MERCHANT_PORTAL_URL.
+     */
+    public const CONFIG_MERCHANT_PORTAL_URL = 'merchant_portal_url';
+
     /** Redirect straight to the EveryPay hosted payment page (default). */
     public const DISPLAY_MODE_REDIRECT = 'redirect';
 
@@ -49,7 +57,10 @@ final class EveryPayGateway
     /** Sent as integration_details.integration (EveryPay merchant telemetry). */
     public const INTEGRATION_NAME = 'pkglt/sylius-everypay-plugin';
 
-    /** Linked from the admin order panel for live payments. */
+    /**
+     * Linked from the admin order panel for live payments when no
+     * CONFIG_MERCHANT_PORTAL_URL is configured.
+     */
     public const LIVE_MERCHANT_PORTAL_URL = 'https://portal.every-pay.eu/';
 
     /** Sylius stores amounts in cents; the EveryPay API expects a 2-decimal number. */

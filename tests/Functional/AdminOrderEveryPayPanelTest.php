@@ -49,4 +49,57 @@ final class AdminOrderEveryPayPanelTest extends FunctionalTestCase
         // Demo environment: no live merchant portal link.
         self::assertStringNotContainsString('portal.every-pay.eu', $content);
     }
+
+    public function testLivePaymentLinksToTheDefaultMerchantPortal(): void
+    {
+        $content = $this->renderOrderPageWithLivePayment();
+
+        self::assertStringContainsString('data-test-everypay-portal-link', $content);
+        self::assertStringContainsString(EveryPayGateway::LIVE_MERCHANT_PORTAL_URL, $content);
+    }
+
+    public function testLivePaymentLinksToTheConfiguredMerchantPortal(): void
+    {
+        $content = $this->renderOrderPageWithLivePayment([
+            EveryPayGateway::CONFIG_MERCHANT_PORTAL_URL => 'https://portal.acquirer-bank.example/',
+        ]);
+
+        self::assertStringContainsString('data-test-everypay-portal-link', $content);
+        self::assertStringContainsString('https://portal.acquirer-bank.example/', $content);
+        // The configured address replaces the default, it is not added next to it.
+        self::assertStringNotContainsString(EveryPayGateway::LIVE_MERCHANT_PORTAL_URL, $content);
+    }
+
+    /**
+     * @param array<string, mixed> $gatewayConfigOverrides
+     */
+    private function renderOrderPageWithLivePayment(array $gatewayConfigOverrides = []): string
+    {
+        $client = static::createClient();
+        $this->prepareDatabase();
+        $channel = $this->createShopEnvironment();
+        $method = $this->createEveryPayPaymentMethod($channel, 'everypay', array_merge(
+            [EveryPayGateway::CONFIG_ENVIRONMENT => EveryPayGateway::ENVIRONMENT_LIVE],
+            $gatewayConfigOverrides,
+        ));
+        $payment = $this->createOrderWithPayment($channel, $method, [
+            EveryPayGateway::DETAILS_KEY => [
+                'payment_reference' => self::PAYMENT_REFERENCE,
+                'payment_state' => 'settled',
+            ],
+        ]);
+        $admin = $this->shopFixtures()->createAdminUser();
+
+        $client->loginUser($admin, 'admin');
+
+        $order = $payment->getOrder();
+        self::assertNotNull($order);
+        $router = $this->service(RouterInterface::class, 'router');
+
+        $client->request('GET', $router->generate('sylius_admin_order_show', ['id' => $order->getId()]));
+
+        self::assertResponseIsSuccessful();
+
+        return (string) $client->getResponse()->getContent();
+    }
 }

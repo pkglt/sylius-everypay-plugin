@@ -105,7 +105,10 @@ final class ShopFixtures
         return $channel;
     }
 
-    public function createEveryPayPaymentMethod(ChannelInterface $channel, string $code = 'everypay'): PaymentMethodInterface
+    /**
+     * @param array<string, mixed> $gatewayConfigOverrides merged over the default gateway config
+     */
+    public function createEveryPayPaymentMethod(ChannelInterface $channel, string $code = 'everypay', array $gatewayConfigOverrides = []): PaymentMethodInterface
     {
         $method = $this->paymentMethodFactory->createWithGateway(EveryPayGateway::FACTORY_NAME);
         $method->setCode($code);
@@ -120,12 +123,12 @@ final class ShopFixtures
             throw new \LogicException('The payment method factory did not create a gateway config.');
         }
         $gatewayConfig->setGatewayName($code);
-        $gatewayConfig->setConfig([
+        $gatewayConfig->setConfig(array_merge([
             EveryPayGateway::CONFIG_API_USERNAME => 'abcd1234abcd1234',
             EveryPayGateway::CONFIG_API_SECRET => 'test-secret',
             EveryPayGateway::CONFIG_ACCOUNT_NAME => 'EUR3D1',
             EveryPayGateway::CONFIG_ENVIRONMENT => EveryPayGateway::ENVIRONMENT_DEMO,
-        ]);
+        ], $gatewayConfigOverrides));
         if ($gatewayConfig instanceof PayumAwareGatewayConfigInterface) {
             $gatewayConfig->setUsePayum(false);
         }

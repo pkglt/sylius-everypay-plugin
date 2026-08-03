@@ -99,6 +99,7 @@ In the Sylius admin: *Payment methods -> Create*, choose the **EveryPay
 | Processing account | e.g. `EUR3D1` - shown in the portal; fixes the currency and available methods |
 | Environment | Demo (`igw-demo.every-pay.com`) or Live (`pay.every-pay.eu`) |
 | Checkout appearance | Redirect to EveryPay (default), or show the payment method buttons in the shop |
+| Merchant portal address | Optional. Banks white-label the merchant portal under their own address (e.g. SEB: `portal.ecommerce.sebgroup.com`); admin pages link there instead of `portal.every-pay.eu` |
 
 ![EveryPay gateway configuration form](docs/images/admin-gateway-config.png)
 
@@ -154,7 +155,9 @@ Sylius payment-request status flow to settle the payment.
 | Refund | admin presses Refund | refund payment request + `POST /v4/payments/refund` inside one transaction; on API failure everything rolls back and the admin sees an error flash |
 
 Every payment row on the admin order page shows the raw EveryPay state and
-the payment reference (and, for live payments, a link to the merchant portal):
+the payment reference (and, for live payments, a link to the merchant
+portal - the address configured on the gateway, or the standard EveryPay
+portal when none is set):
 
 ![Admin order payments panel](docs/images/admin-order-payments.png)
 
