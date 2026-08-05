@@ -172,6 +172,11 @@ final class EveryPayApiClientTest extends TestCase
             self::assertStringNotContainsString('a04e7ce1060e7024', $message);
             self::assertStringNotContainsString('api_username=', $message);
 
+            // Log handlers walk the chain, so a linked exception must stay clean too.
+            for ($linked = $exception->getPrevious(); $linked !== null; $linked = $linked->getPrevious()) {
+                self::assertStringNotContainsString('a04e7ce1060e7024', $linked->getMessage());
+            }
+
             foreach ($expectedFragments as $fragment) {
                 self::assertStringContainsString($fragment, $message);
             }

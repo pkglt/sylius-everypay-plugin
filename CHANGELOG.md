@@ -57,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shopper, so gateway error bodies no longer reach it; the full detail stays in
   the `everypay` log channel. An API consumer reading the `error` key now gets a
   stable code instead of prose.
+- A transport failure is no longer chained to the `EveryPayApiException` it
+  raises. Log handlers and error trackers render a previous exception's message
+  verbatim, and the transport one quotes the full request URL - so the credential
+  the message itself had dropped came straight back through the chain. The
+  failing exception's class and reason are carried into the message instead.
 
 ## [0.5.0] - 2026-08-04
 

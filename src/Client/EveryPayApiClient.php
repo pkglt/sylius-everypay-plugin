@@ -120,12 +120,15 @@ final readonly class EveryPayApiClient
             // Transport messages quote the full request URL back at us.
             $reason = str_replace($credentials->baseUrl . $path, $credentials->baseUrl . $endpoint, $e->getMessage());
 
+            // Not chained on purpose: log handlers render a previous exception's
+            // message verbatim, which would put the unredacted URL straight back.
             throw new EveryPayApiException(sprintf(
-                'EveryPay request %s %s failed: %s',
+                'EveryPay request %s %s failed (%s): %s',
                 $method,
                 $endpoint,
+                $e::class,
                 $this->redactCredentials($reason, $credentials),
-            ), previous: $e);
+            ));
         }
 
         $data = json_decode($content, true);
