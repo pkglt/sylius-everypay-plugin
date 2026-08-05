@@ -21,6 +21,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The test suite runs on PHPUnit 11/12 (`^11.5 || ^12.5`, was the EOL
   `^10.5`): PHP 8.3+ resolves PHPUnit 12, PHP 8.2 stays on PHPUnit 11.
   Dev-only - nothing changes for consumers of the plugin.
+- Billing/shipping address fields in the one-off payment request are
+  truncated to the character limits EveryPay enforces from 2026-10-01
+  (city/street 50 characters, postcode 16), so an over-long address keeps
+  feeding card fraud scoring instead of risking a rejected payment request.
+- The `order_reference` sent to EveryPay is transliterated and reduced to
+  the charset the API accepts, with the order-number prefix capped at 100
+  characters (the Open Banking limit is 120). Sylius' default numeric order
+  numbers pass through unchanged; a host app with a custom order number
+  generator no longer risks the whole payment request being rejected. The
+  payment-id suffix keeps the reference unique either way.
+- The Open Banking bank-statement text is now `{channel} ({number})` instead
+  of `{channel} order {number}` - the noun phrase reads naturally when the
+  platform prefixes the refund transfer's copy of it with `Refund - `, and
+  the 65-character cap now trims the channel name, never the order number.
 
 ### Fixed
 

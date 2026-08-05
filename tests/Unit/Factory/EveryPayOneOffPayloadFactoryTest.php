@@ -44,7 +44,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame('203.0.113.7', $payload['customer_ip']);
         self::assertSame('LT', $payload['preferred_country']);
         // Diacritics are outside the SEPA statement charset and get transliterated.
-        self::assertSame('Knygu namai order 000123', $payload['payment_description']);
+        self::assertSame('Knygu namai (000123)', $payload['payment_description']);
         self::assertSame('Kaunas', $payload['billing_city']);
         self::assertSame('LT', $payload['billing_country']);
         self::assertSame('Savanorių pr. 1', $payload['billing_line1']);
@@ -88,7 +88,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertArrayNotHasKey('billing_state', $payload);
         self::assertSame('Berlin', $payload['billing_city']);
         // No channel stubbed: the description degrades to the order number.
-        self::assertSame('order 000009', $payload['payment_description']);
+        self::assertSame('(000009)', $payload['payment_description']);
     }
 
     public function testPaymentDescriptionTransliteratesDiacriticsAndStripsTheRest(): void
@@ -112,10 +112,10 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
             self::CUSTOMER_URL,
         );
 
-        self::assertSame('Zasu ukis Maja Oo order 000042', $payload['payment_description']);
+        self::assertSame('Zasu ukis Maja Oo (000042)', $payload['payment_description']);
     }
 
-    public function testPaymentDescriptionIsCappedAtSixtyFiveCharacters(): void
+    public function testPaymentDescriptionCapTrimsTheChannelNameAndKeepsTheOrderNumber(): void
     {
         $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
 
@@ -135,8 +135,73 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
 
         $description = $payload['payment_description'];
         self::assertIsString($description);
-        self::assertSame(65, strlen($description));
+        self::assertLessThanOrEqual(65, strlen($description));
+        self::assertStringEndsWith('(000010)', $description);
         self::assertMatchesRegularExpression("#^[a-zA-Z0-9/?:().,'+ -]+$#", $description);
+    }
+
+    public function testOrderReferenceIsSanitizedAndCappedForCustomOrderNumbers(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 7,
+                // Diacritics transliterate, the hash and spaces are outside
+                // the order_reference charset and get stripped.
+                orderNumber: 'UŽS #123 (web)',
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: null,
+                shippingAddress: null,
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame('UZS123(web)-7', $payload['order_reference']);
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 12345,
+                orderNumber: str_repeat('9', 150),
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: null,
+                shippingAddress: null,
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        // Capped under the 120-char Open Banking limit, payment-id suffix intact.
+        self::assertSame(str_repeat('9', 100) . '-12345', $payload['order_reference']);
+    }
+
+    public function testAddressFieldsAreTruncatedToTheUpcomingCharacterLimits(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000011',
+                localeCode: 'lt_LT',
+                email: null,
+                // Multibyte repeats prove the cut counts characters, not bytes.
+                billingAddress: $this->address(str_repeat('Ž', 60), 'LT', str_repeat('ą', 55), str_repeat('9', 20), 'LT-KU'),
+                shippingAddress: $this->address(str_repeat('Ū', 51), 'LT', 'Gedimino pr. 1', '01103'),
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame(str_repeat('Ž', 50), $payload['billing_city']);
+        self::assertSame(str_repeat('ą', 50), $payload['billing_line1']);
+        self::assertSame(str_repeat('9', 16), $payload['billing_postcode']);
+        self::assertSame('LT-KU', $payload['billing_state']);
+        self::assertSame(str_repeat('Ū', 50), $payload['shipping_city']);
+        self::assertSame('Gedimino pr. 1', $payload['shipping_line1']);
     }
 
     private function requestStackWithClientIp(?string $ip): RequestStack

@@ -27,6 +27,18 @@ final readonly class EveryPayOneOffPayloadFactory
 
     private const PREFERRED_COUNTRIES = ['EE', 'LV', 'LT'];
 
+    /**
+     * Character limits EveryPay enforces on address fields from 2026-10-01
+     * (255 across the board before that).
+     */
+    private const ADDRESS_FIELD_LIMITS = [
+        'city' => 50,
+        'country' => 3,
+        'line1' => 50,
+        'postcode' => 16,
+        'state' => 255,
+    ];
+
     public function __construct(
         private RequestStack $requestStack,
     ) {
@@ -44,9 +56,7 @@ final readonly class EveryPayOneOffPayloadFactory
 
         $payload = [
             'amount' => EveryPayGateway::amountToDecimal((int) $payment->getAmount()),
-            // Unique per payment attempt: EveryPay validates order_reference
-            // uniqueness per shop, and Sylius creates a new Payment per retry
-            'order_reference' => sprintf('%s-%d', (string) $order->getNumber(), (int) $payment->getId()),
+            'order_reference' => $this->orderReference($order, $payment),
             'customer_url' => $customerUrl,
             'locale' => $this->resolveLocale($order),
             'payment_description' => $this->paymentDescription($order),
@@ -93,20 +103,51 @@ final readonly class EveryPayOneOffPayloadFactory
     }
 
     /**
-     * Bank-statement text for Open Banking payments: "{channel} order {number}",
-     * reduced to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] - the
-     * SEPA set) and capped at 65 characters. Letters with diacritics are
-     * transliterated to their ASCII base first; deleting them outright would
-     * garble the shop name on the customer's statement.
+     * "{orderNumber}-{paymentId}" - unique per payment attempt: EveryPay
+     * validates order_reference uniqueness per shop, and Sylius creates a new
+     * Payment per retry. The order number is transliterated and reduced to
+     * the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+] - no spaces) and
+     * capped at 100 characters so the reference stays under the Open Banking
+     * limit of 120: Sylius' default numeric order numbers pass untouched,
+     * and the payment-id suffix keeps the reference unique regardless of
+     * what sanitization does to a custom one.
+     */
+    private function orderReference(OrderInterface $order, PaymentInterface $payment): string
+    {
+        $number = u((string) $order->getNumber())->ascii()->toString();
+        $number = (string) preg_replace("#[^a-zA-Z0-9/?:().,'+-]#", '', $number);
+
+        return sprintf('%s-%d', substr($number, 0, 100), (int) $payment->getId());
+    }
+
+    /**
+     * Bank-statement text for Open Banking payments: "{channel} ({number})" -
+     * a language-neutral noun phrase that still reads naturally when the
+     * EveryPay/LHV platform prefixes the refund transfer's copy of it with
+     * "Refund - ". Capped at 65 characters by trimming the channel name, so
+     * the order number always survives.
      */
     private function paymentDescription(OrderInterface $order): string
     {
-        $text = sprintf('%s order %s', (string) $order->getChannel()?->getName(), (string) $order->getNumber());
+        $suffix = sprintf('(%s)', $this->statementText((string) $order->getNumber()));
+        $name = $this->statementText((string) $order->getChannel()?->getName());
+        $name = rtrim(substr($name, 0, max(0, 65 - strlen($suffix) - 1)));
+
+        return substr(trim($name . ' ' . $suffix), 0, 65);
+    }
+
+    /**
+     * Reduces text to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] -
+     * the SEPA set). Letters with diacritics are transliterated to their
+     * ASCII base first; deleting them outright would garble the shop name on
+     * the customer's statement.
+     */
+    private function statementText(string $text): string
+    {
         $text = u($text)->ascii()->toString();
         $text = (string) preg_replace("#[^a-zA-Z0-9/?:().,'+ -]#", '', $text);
-        $text = trim((string) preg_replace('/\s+/', ' ', $text));
 
-        return substr($text, 0, 65);
+        return trim((string) preg_replace('/\s+/', ' ', $text));
     }
 
     private function resolveLocale(OrderInterface $order): string
@@ -119,7 +160,9 @@ final readonly class EveryPayOneOffPayloadFactory
 
     /**
      * Billing/shipping details improve card fraud scoring and will become
-     * increasingly expected by Visa/Mastercard (EveryPay spec note, 2026-10).
+     * increasingly expected by Visa/Mastercard. Values are capped at the
+     * upcoming character limits - a truncated address still feeds fraud
+     * scoring, an over-long one could fail the whole payment request.
      *
      * @return array<string, string>
      */
@@ -138,7 +181,7 @@ final readonly class EveryPayOneOffPayloadFactory
             'state' => $address->getProvinceCode(),
         ] as $suffix => $value) {
             if (null !== $value && '' !== $value) {
-                $fields[sprintf('%s_%s', $prefix, $suffix)] = $value;
+                $fields[sprintf('%s_%s', $prefix, $suffix)] = mb_substr($value, 0, self::ADDRESS_FIELD_LIMITS[$suffix]);
             }
         }
 
