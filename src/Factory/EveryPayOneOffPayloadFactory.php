@@ -27,6 +27,18 @@ final readonly class EveryPayOneOffPayloadFactory
 
     private const PREFERRED_COUNTRIES = ['EE', 'LV', 'LT'];
 
+    /**
+     * Character limits EveryPay enforces on address fields from 2026-10-01
+     * (255 across the board before that).
+     */
+    private const ADDRESS_FIELD_LIMITS = [
+        'city' => 50,
+        'country' => 3,
+        'line1' => 50,
+        'postcode' => 16,
+        'state' => 255,
+    ];
+
     public function __construct(
         private RequestStack $requestStack,
     ) {
@@ -119,7 +131,9 @@ final readonly class EveryPayOneOffPayloadFactory
 
     /**
      * Billing/shipping details improve card fraud scoring and will become
-     * increasingly expected by Visa/Mastercard (EveryPay spec note, 2026-10).
+     * increasingly expected by Visa/Mastercard. Values are capped at the
+     * upcoming character limits - a truncated address still feeds fraud
+     * scoring, an over-long one could fail the whole payment request.
      *
      * @return array<string, string>
      */
@@ -138,7 +152,7 @@ final readonly class EveryPayOneOffPayloadFactory
             'state' => $address->getProvinceCode(),
         ] as $suffix => $value) {
             if (null !== $value && '' !== $value) {
-                $fields[sprintf('%s_%s', $prefix, $suffix)] = $value;
+                $fields[sprintf('%s_%s', $prefix, $suffix)] = mb_substr($value, 0, self::ADDRESS_FIELD_LIMITS[$suffix]);
             }
         }
 

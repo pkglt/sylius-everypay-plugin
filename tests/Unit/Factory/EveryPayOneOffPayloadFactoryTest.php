@@ -139,6 +139,32 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertMatchesRegularExpression("#^[a-zA-Z0-9/?:().,'+ -]+$#", $description);
     }
 
+    public function testAddressFieldsAreTruncatedToTheUpcomingCharacterLimits(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000011',
+                localeCode: 'lt_LT',
+                email: null,
+                // Multibyte repeats prove the cut counts characters, not bytes.
+                billingAddress: $this->address(str_repeat('Ž', 60), 'LT', str_repeat('ą', 55), str_repeat('9', 20), 'LT-KU'),
+                shippingAddress: $this->address(str_repeat('Ū', 51), 'LT', 'Gedimino pr. 1', '01103'),
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame(str_repeat('Ž', 50), $payload['billing_city']);
+        self::assertSame(str_repeat('ą', 50), $payload['billing_line1']);
+        self::assertSame(str_repeat('9', 16), $payload['billing_postcode']);
+        self::assertSame('LT-KU', $payload['billing_state']);
+        self::assertSame(str_repeat('Ū', 50), $payload['shipping_city']);
+        self::assertSame('Gedimino pr. 1', $payload['shipping_line1']);
+    }
+
     private function requestStackWithClientIp(?string $ip): RequestStack
     {
         $requestStack = new RequestStack();

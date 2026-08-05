@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The test suite runs on PHPUnit 11/12 (`^11.5 || ^12.5`, was the EOL
   `^10.5`): PHP 8.3+ resolves PHPUnit 12, PHP 8.2 stays on PHPUnit 11.
   Dev-only - nothing changes for consumers of the plugin.
+- Billing/shipping address fields in the one-off payment request are
+  truncated to the character limits EveryPay enforces from 2026-10-01
+  (city/street 50 characters, postcode 16), so an over-long address keeps
+  feeding card fraud scoring instead of risking a rejected payment request.
 
 ### Fixed
 
