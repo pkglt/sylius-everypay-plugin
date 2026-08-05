@@ -11,6 +11,7 @@ use Pkg\SyliusEveryPayPlugin\CommandHandler\StatusEveryPayPaymentHandler;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Processor\EveryPayPaymentSynchronizer;
 use Pkg\SyliusEveryPayPlugin\Processor\EveryPayStateMapper;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
@@ -23,10 +24,14 @@ use Sylius\Component\Payment\PaymentRequestTransitions;
 use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Tests\Pkg\SyliusEveryPayPlugin\Support\RecordingLogger;
 
 final class StatusEveryPayPaymentHandlerTest extends TestCase
 {
     private const PAYMENT_REFERENCE = 'abc123def456abc123def456abc123def456abc123def456abc123def456abcd';
+
+    /** Half of the HTTP Basic credential pair - it must never reach the shopper. */
+    private const API_USERNAME = 'a04e7ce1060e7024';
 
     /** @var array<array{object, string, string}> */
     private array $appliedTransitions = [];
@@ -61,7 +66,10 @@ final class StatusEveryPayPaymentHandlerTest extends TestCase
         // The documented invariant: a temporary API failure on customer return
         // is swallowed - the payment stays processing and the server callback
         // redeliveries settle it later.
-        self::assertArrayHasKey('error', $paymentRequest->getResponseData());
+        self::assertSame(
+            ['error' => EveryPayGateway::ERROR_GATEWAY_UNAVAILABLE],
+            $paymentRequest->getResponseData(),
+        );
         self::assertSame(
             [[$paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_FAIL]],
             $this->appliedTransitions,
@@ -72,11 +80,38 @@ final class StatusEveryPayPaymentHandlerTest extends TestCase
         self::assertSame(PaymentInterface::STATE_PROCESSING, $payment->getState());
     }
 
+    public function testApiFailureKeepsTheCredentialAndGatewayTextOutOfTheShopperVisibleResponse(): void
+    {
+        $paymentRequest = $this->paymentRequest();
+        $logger = new RecordingLogger();
+        // The client folds the request path (which carries api_username) and the
+        // raw gateway body into the exception message. responseData is served to
+        // the shopper by the Sylius shop API, so neither may be persisted there.
+        $handler = $this->handler(
+            $paymentRequest,
+            new MockResponse('gateway maintenance in progress', ['http_code' => 500]),
+            $logger,
+        );
+
+        $handler(new StatusEveryPayPayment('hash'));
+
+        $responseData = $paymentRequest->getResponseData();
+        self::assertSame(['error' => EveryPayGateway::ERROR_GATEWAY_UNAVAILABLE], $responseData);
+
+        $serialized = json_encode($responseData, \JSON_THROW_ON_ERROR);
+        self::assertStringNotContainsString(self::API_USERNAME, $serialized);
+        self::assertStringNotContainsString('maintenance', $serialized);
+
+        // The detail stays operator-facing: it is logged (with the exception in
+        // the context) on the everypay channel.
+        self::assertSame(['EveryPay status check on customer return failed.'], $logger->messages('error'));
+    }
+
     private function paymentRequest(): PaymentRequest
     {
         $gatewayConfig = $this->createStub(GatewayConfigInterface::class);
         $gatewayConfig->method('getConfig')->willReturn([
-            EveryPayGateway::CONFIG_API_USERNAME => 'a04e7ce1060e7024',
+            EveryPayGateway::CONFIG_API_USERNAME => self::API_USERNAME,
             EveryPayGateway::CONFIG_API_SECRET => 'secret',
             EveryPayGateway::CONFIG_ACCOUNT_NAME => 'EUR3D1',
             EveryPayGateway::CONFIG_ENVIRONMENT => EveryPayGateway::ENVIRONMENT_DEMO,
@@ -95,7 +130,7 @@ final class StatusEveryPayPaymentHandlerTest extends TestCase
         return new PaymentRequest($payment, $method);
     }
 
-    private function handler(PaymentRequest $paymentRequest, MockResponse $apiResponse): StatusEveryPayPaymentHandler
+    private function handler(PaymentRequest $paymentRequest, MockResponse $apiResponse, ?LoggerInterface $logger = null): StatusEveryPayPaymentHandler
     {
         $paymentRequestProvider = $this->createStub(PaymentRequestProviderInterface::class);
         $paymentRequestProvider->method('provide')->willReturn($paymentRequest);
@@ -120,7 +155,7 @@ final class StatusEveryPayPaymentHandlerTest extends TestCase
             $paymentRequestProvider,
             $synchronizer,
             $stateMachine,
-            new NullLogger(),
+            $logger ?? new NullLogger(),
         );
     }
 }

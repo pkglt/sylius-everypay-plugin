@@ -51,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   HTTP Basic credential pair, which rides in the query string of every GET call.
   Messages now quote the endpoint without its query string, and credential values
   echoed back in a gateway error body or quoted in a transport error are redacted.
+- A failed capture or status check stores a generic indicator in the payment
+  request `responseData` (`gateway_unavailable`, `invalid_gateway_response`)
+  rather than the raw exception message. Sylius serializes `responseData` to the
+  shopper, so gateway error bodies no longer reach it; the full detail stays in
+  the `everypay` log channel. An API consumer reading the `error` key now gets a
+  stable code instead of prose.
 
 ## [0.5.0] - 2026-08-04
 

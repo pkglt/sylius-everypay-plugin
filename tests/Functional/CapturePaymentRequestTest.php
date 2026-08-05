@@ -93,7 +93,12 @@ final class CapturePaymentRequestTest extends FunctionalTestCase
         $payment = EveryPayGateway::corePaymentFrom($paymentRequest);
         self::assertSame(PaymentRequestInterface::STATE_FAILED, $paymentRequest->getState());
         self::assertSame(PaymentInterface::STATE_FAILED, $payment->getState());
-        self::assertArrayHasKey('error', $paymentRequest->getResponseData());
+        // Shopper-readable responseData carries a generic code, never the
+        // gateway text (which embeds the api_username).
+        self::assertSame(
+            ['error' => EveryPayGateway::ERROR_GATEWAY_UNAVAILABLE],
+            $paymentRequest->getResponseData(),
+        );
     }
 
     private function createCapturePaymentRequest(): PaymentRequestInterface
