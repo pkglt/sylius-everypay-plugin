@@ -126,9 +126,8 @@ Notes:
   For other banks, refund OB payments manually from the bank and use the API
   call to keep statuses in sync.
 
-Payer-visible statement texts (not in the API docs; confirmed 2026-08 with
-an LHV merchant account and a Swedbank payer account - both statements carry
-the same texts):
+Payer-visible statement texts (not in the API docs; confirmed 2026-08 on
+both the merchant's and the payer's statements - both carry the same texts):
 
 - OB payment: the description line is `payment_description`; the
   counterparty is the merchant name transliterated to the SEPA restricted
