@@ -19,7 +19,7 @@ return static function (ContainerConfigurator $configurator): void {
     // #[Autowire]) - the prototype below only registers them as autowired,
     // autoconfigured services. Excluded: the bundle/DI plumbing, plain value
     // objects, the command DTOs (messages rather than services) and the
-    // shop-bundle integration, which the extension loads conditionally.
+    // shop/admin bundle integrations, which the extension loads conditionally.
     $services->load('Pkg\\SyliusEveryPayPlugin\\', __DIR__ . '/../src/')
         ->exclude([
             __DIR__ . '/../src/PkgSyliusEveryPayPlugin.php',
@@ -28,6 +28,7 @@ return static function (ContainerConfigurator $configurator): void {
             __DIR__ . '/../src/Command/',
             __DIR__ . '/../src/Client/EveryPayApiException.php',
             __DIR__ . '/../src/Client/EveryPayCredentials.php',
+            __DIR__ . '/../src/Notification/',
             __DIR__ . '/../src/Provider/SyliusShopAfterPayUrlProvider.php',
             __DIR__ . '/../src/Validator/Constraints/ValidEveryPayCredentials.php',
         ]);

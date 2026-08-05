@@ -24,3 +24,5 @@ pkg_everypay:
         back_to_order: 'Back to the order'
         everypay_state: 'EveryPay state'
         merchant_portal: 'EveryPay merchant portal'
+        notifications:
+            charged_back: 'Payment for order %order_number% was charged back - review the dispute in the EveryPay merchant portal.'

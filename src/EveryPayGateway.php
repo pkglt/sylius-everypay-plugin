@@ -114,6 +114,25 @@ final class EveryPayGateway
     }
 
     /**
+     * The merchant portal address admin pages link to: the configured
+     * white-label address when set, the standard EveryPay portal otherwise -
+     * and only for live payments (the demo environment has no portal
+     * counterpart worth linking).
+     *
+     * @param array<array-key, mixed> $config
+     */
+    public static function merchantPortalUrlFrom(array $config): ?string
+    {
+        if (self::ENVIRONMENT_LIVE !== ($config[self::CONFIG_ENVIRONMENT] ?? null)) {
+            return null;
+        }
+
+        $configured = $config[self::CONFIG_MERCHANT_PORTAL_URL] ?? null;
+
+        return is_string($configured) && '' !== $configured ? $configured : self::LIVE_MERCHANT_PORTAL_URL;
+    }
+
+    /**
      * @param array<array-key, mixed> $config
      */
     public static function displayModeFrom(array $config): string

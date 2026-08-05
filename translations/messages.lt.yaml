@@ -24,3 +24,5 @@ pkg_everypay:
         back_to_order: 'Grįžti į užsakymą'
         everypay_state: 'EveryPay būsena'
         merchant_portal: 'EveryPay pardavėjo portalas'
+        notifications:
+            charged_back: 'Užsakymo %order_number% mokėjimas užginčytas (chargeback) - peržiūrėkite ginčą EveryPay pardavėjo portale.'

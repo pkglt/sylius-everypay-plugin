@@ -25,3 +25,5 @@ pkg_everypay:
         back_to_order: 'Tagasi tellimuse juurde'
         everypay_state: 'EveryPay olek'
         merchant_portal: 'EveryPay kaupmehe portaal'
+        notifications:
+            charged_back: 'Tellimuse %order_number% makse vaidlustati (chargeback) - vaadake vaidlus üle EveryPay kaupmehe portaalis.'
