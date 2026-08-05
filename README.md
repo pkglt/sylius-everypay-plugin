@@ -36,7 +36,9 @@ that gap.
 - **Full refunds** from the standard Sylius admin Refund button, executed
   transactionally (a failed EveryPay refund never leaves a payment marked refunded)
 - **Portal-initiated refund detection** - a refund made in the EveryPay merchant
-  portal syncs back without triggering a second refund API call
+  portal syncs back without triggering a second refund API call; an admin refund
+  rejected because the portal already refunded the payment reconciles against
+  the live EveryPay state instead of failing
 - **Retry-friendly checkout** - a customer who bounces off the hosted page can
   pay again; failed attempts get a fresh Sylius payment automatically
 - **Encrypted credentials** - gateway config is encrypted at rest by Sylius
@@ -152,7 +154,7 @@ Sylius payment-request status flow to settle the payment.
 | Capture | customer finishes checkout | `POST /v4/payments/oneoff` -> customer is redirected (303) to the hosted payment page |
 | Status | customer returns to the shop | payment state re-read from the API, Sylius payment transitioned accordingly |
 | Notify | EveryPay server callback | payment resolved by `payment_reference`, state re-read from the API; non-2xx responses make EveryPay redeliver (6 retries / 72 h) |
-| Refund | admin presses Refund | refund payment request + `POST /v4/payments/refund` inside one transaction; on API failure everything rolls back and the admin sees an error flash |
+| Refund | admin presses Refund | refund payment request + `POST /v4/payments/refund` inside one transaction; a rejected refund reconciles against the re-read payment state (already refunded in the portal -> completes), any other failure rolls everything back and the admin sees an error flash |
 
 Every payment row on the admin order page shows the raw EveryPay state and
 the payment reference (and, for live payments, a link to the merchant
