@@ -22,6 +22,8 @@ final class EveryPayStateMapper
 {
     public const STATE_SETTLED = 'settled';
 
+    public const STATE_REFUNDED = 'refunded';
+
     private const MAP = [
         'waiting_for_3ds_response' => PaymentInterface::STATE_PROCESSING,
         'waiting_for_sca' => PaymentInterface::STATE_PROCESSING,
@@ -32,7 +34,7 @@ final class EveryPayStateMapper
         'failed' => PaymentInterface::STATE_FAILED,
         'abandoned' => PaymentInterface::STATE_FAILED,
         'voided' => PaymentInterface::STATE_CANCELLED,
-        'refunded' => PaymentInterface::STATE_REFUNDED,
+        self::STATE_REFUNDED => PaymentInterface::STATE_REFUNDED,
     ];
 
     public function toSyliusState(string $everyPayState): ?string

@@ -25,3 +25,17 @@ Feature: Refunding EveryPay payments
         When the administrator tries to refund the payment
         Then the refund is rejected
         And the payment remains completed in the database
+
+    Scenario: A refund rejected because the portal already refunded it reconciles
+        Given EveryPay will reject the refund as already refunded
+        When the administrator refunds the payment
+        Then a single refund request was sent to EveryPay
+        And the payment state was re-checked with EveryPay
+        And the payment is refunded
+
+    Scenario: A rejected refund with the money still in place stays rejected
+        Given EveryPay will reject the refund while the payment is still settled
+        When the administrator tries to refund the payment
+        Then the payment state was re-checked with EveryPay
+        And the refund is rejected
+        And the payment remains completed in the database

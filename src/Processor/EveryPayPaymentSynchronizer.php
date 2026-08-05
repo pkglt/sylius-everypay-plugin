@@ -57,16 +57,7 @@ final readonly class EveryPayPaymentSynchronizer
             $paymentReference,
         );
 
-        $details[EveryPayGateway::DETAILS_KEY] = array_merge(
-            EveryPayGateway::detailsFrom($details),
-            [
-                'payment_state' => $remote['payment_state'] ?? null,
-                'payment_method' => $remote['payment_method'] ?? null,
-                'standing_amount' => $remote['standing_amount'] ?? null,
-                'synchronized_at' => $remote['payment_created_at'] ?? null,
-            ],
-        );
-        $payment->setDetails($details);
+        $payment->setDetails(EveryPayGateway::withRemoteSnapshot($details, $remote));
 
         $remoteState = $remote['payment_state'] ?? null;
         $targetState = is_string($remoteState) ? $this->stateMapper->toSyliusState($remoteState) : null;

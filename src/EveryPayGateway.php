@@ -82,6 +82,28 @@ final class EveryPayGateway
     }
 
     /**
+     * Merges an authoritative payment payload (a GET /v4/payments/{ref} or
+     * refund response body) into the everypay section of the payment details,
+     * preserving capture-time keys such as payment_reference and payment_link.
+     *
+     * @param array<array-key, mixed> $paymentDetails
+     * @param array<string, mixed> $remote
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function withRemoteSnapshot(array $paymentDetails, array $remote): array
+    {
+        $paymentDetails[self::DETAILS_KEY] = array_merge(self::detailsFrom($paymentDetails), [
+            'payment_state' => $remote['payment_state'] ?? null,
+            'payment_method' => $remote['payment_method'] ?? null,
+            'standing_amount' => $remote['standing_amount'] ?? null,
+            'synchronized_at' => $remote['payment_created_at'] ?? null,
+        ]);
+
+        return $paymentDetails;
+    }
+
+    /**
      * @param array<array-key, mixed> $paymentDetails
      */
     public static function paymentReferenceFrom(array $paymentDetails): ?string

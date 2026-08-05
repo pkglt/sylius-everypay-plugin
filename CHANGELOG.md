@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- An admin refund rejected by EveryPay because the payment was already
+  refunded (typically from the merchant portal, before the callback was
+  processed) no longer fails with a generic error: the payment state is
+  re-read from the API and, when EveryPay confirms `refunded`, the Sylius
+  payment completes its refund transition with the fresh snapshot. Any other
+  rejection still rolls back and keeps the payment `completed`.
+
 ## [0.5.0] - 2026-08-04
 
 ### Added

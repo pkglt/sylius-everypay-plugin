@@ -24,9 +24,10 @@ use Webmozart\Assert\Assert;
 
 /**
  * Refund flows: the admin-initiated refund (the sylius_payment refund
- * transition - exactly what the admin Refund button applies) and the
+ * transition - exactly what the admin Refund button applies), the
  * portal-initiated refund arriving as a callback, which must never trigger
- * a second refund API call.
+ * a second refund API call, and the rejected refund that reconciles against
+ * the authoritative payment state instead of failing.
  */
 final class EveryPayRefundContext implements Context
 {
@@ -79,6 +80,34 @@ final class EveryPayRefundContext implements Context
         $this->everyPayApi->queueJson([
             'error' => ['code' => 5000, 'message' => 'Processing error'],
         ], 500);
+    }
+
+    #[Given('EveryPay will reject the refund as already refunded')]
+    public function everyPayWillRejectTheRefundAsAlreadyRefunded(): void
+    {
+        $this->everyPayApi->queueJson([
+            'error' => ['code' => 4000, 'message' => 'Refund amount exceeds the standing amount'],
+        ], 422);
+        $this->everyPayApi->queueJson([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_state' => 'refunded',
+            'payment_method' => 'card',
+            'standing_amount' => 0,
+        ]);
+    }
+
+    #[Given('EveryPay will reject the refund while the payment is still settled')]
+    public function everyPayWillRejectTheRefundWhileThePaymentIsStillSettled(): void
+    {
+        $this->everyPayApi->queueJson([
+            'error' => ['code' => 4000, 'message' => 'Invalid refund request'],
+        ], 422);
+        $this->everyPayApi->queueJson([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_state' => 'settled',
+            'payment_method' => 'card',
+            'standing_amount' => 25.99,
+        ]);
     }
 
     #[Given('EveryPay reports the payment as refunded')]
@@ -148,6 +177,12 @@ final class EveryPayRefundContext implements Context
         Assert::count($this->recordedRefundRequests(), 0);
     }
 
+    #[Then('the payment state was re-checked with EveryPay')]
+    public function thePaymentStateWasReCheckedWithEveryPay(): void
+    {
+        Assert::count($this->recordedStateReads(), 1);
+    }
+
     /**
      * @return list<array{method: string, url: string, body: ?string}>
      */
@@ -156,6 +191,18 @@ final class EveryPayRefundContext implements Context
         return array_values(array_filter(
             $this->everyPayApi->recordedRequests(),
             static fn (array $request): bool => str_contains($request['url'], '/v4/payments/refund'),
+        ));
+    }
+
+    /**
+     * @return list<array{method: string, url: string, body: ?string}>
+     */
+    private function recordedStateReads(): array
+    {
+        return array_values(array_filter(
+            $this->everyPayApi->recordedRequests(),
+            static fn (array $request): bool => 'GET' === $request['method'] &&
+                str_contains($request['url'], '/v4/payments/'),
         ));
     }
 
