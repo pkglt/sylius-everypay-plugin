@@ -126,6 +126,23 @@ Notes:
   For other banks, refund OB payments manually from the bank and use the API
   call to keep statuses in sync.
 
+Payer-visible statement texts (not in the API docs; confirmed 2026-08 with
+an LHV merchant account and a Swedbank payer account - both statements carry
+the same texts):
+
+- OB payment: the description line is `payment_description`; the
+  counterparty is the merchant name transliterated to the SEPA restricted
+  charset by the payment-initiation rails (uppercased, diacritics and
+  quotation marks reduced).
+- LHV-executed OB refund: the description is the original
+  `payment_description` prefixed with `Refund - `. The refund API has no
+  text field - the text is composed on the EveryPay/LHV side and is not
+  integrator-controllable. This record's counterparty is the account-holder
+  name as registered at LHV (full diacritics), so the payer can see the
+  same merchant under two spellings across the pair.
+- Card payments/refunds never carry `payment_description`; card statements
+  show the shop `descriptor` (+ MCC) set at onboarding (see `/v4/shops`).
+
 ## Other endpoints (not used by this plugin, available)
 
 `/v4/payments/cit|mit|charge` (token payments), `/v4/agreements`
