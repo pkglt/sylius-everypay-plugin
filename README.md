@@ -39,6 +39,8 @@ that gap.
   portal syncs back without triggering a second refund API call; an admin refund
   rejected because the portal already refunded the payment reconciles against
   the live EveryPay state instead of failing
+- **Chargeback visibility** - a disputed payment shows up in the admin navbar
+  notifications with a link to the merchant portal, instead of only in the logs
 - **Retry-friendly checkout** - a customer who bounces off the hosted page can
   pay again; failed attempts get a fresh Sylius payment automatically
 - **Encrypted credentials** - gateway config is encrypted at rest by Sylius

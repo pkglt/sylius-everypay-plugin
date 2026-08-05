@@ -51,7 +51,7 @@ params are unauthenticated hints, never trusted):
 | `failed`, `abandoned` | failed | Sylius auto-creates the replacement payment |
 | `voided` | cancelled | |
 | `refunded` | refunded | with the sync workflow context (see above) |
-| `charged_back` | - no-op + `warning` log | handled manually in the merchant portal; the raw state stays visible on the admin order page |
+| `charged_back` | - no-op + `warning` log + admin navbar notification | handled manually in the merchant portal; the raw state stays visible on the admin order page, and `ChargedBackPaymentNotificationProvider` keeps the payment listed in the admin navbar bell until the dispute resolution callback updates the stored state |
 
 ## File map
 
@@ -91,17 +91,22 @@ src/
 |   |-- MethodGridViewFactory.php           oneoff payment_methods -> grid options/groups
 |   `-- EveryPayNotifyPaymentProvider.php   callback -> Payment resolution
 |-- Form/EveryPayGatewayConfigurationType.php   admin config form (5 fields)
+|-- Notification/ChargedBackPaymentNotificationProvider.php  charged-back payments ->
+|                                           admin navbar bell (admin-only wiring)
 |-- Validator/Constraints/ValidEveryPayCredentials{,Validator}.php  credential check on save
 `-- EventListener/RefundEveryPayPaymentListener.php  transactional refund bridge
 
 config/services.php                         autowire/autoconfigure prototype over src/
 config/services/integrations/sylius_shop.php  shop-only after-pay wiring
+config/services/integrations/sylius_admin.php  admin-only chargeback notification wiring
 config/config.yaml                          imports config/app/*.yaml (host app imports this)
 config/app/sylius_payment.yaml              gateway validation groups
-config/app/twig_hooks.yaml                  admin form + order panel hooks (see gotchas)
+config/app/twig_hooks.yaml                  admin form + order panel + navbar hooks (see gotchas)
 templates/admin/payment_method/...          gateway credential fields partial
 templates/admin/order/.../everypay.html.twig  per-payment panel on the admin order page
                                             (raw EveryPay state, reference, portal link)
+templates/admin/shared/.../notifications.html.twig  navbar notifications component template
+                                            (stock markup + optional link per notification)
 templates/shop/method_grid.html.twig        in-shop payment method grid
 translations/{messages,flashes,validators}.{en,lt,et,lv}.yaml
 tests/                                      unit, functional and Behat suites (layout in

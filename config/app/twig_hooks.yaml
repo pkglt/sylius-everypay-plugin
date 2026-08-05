@@ -16,3 +16,15 @@ sylius_twig_hooks:
             everypay:
                 template: '@PkgSyliusEveryPayPlugin/admin/order/show/payments/item/everypay.html.twig'
                 priority: 150
+
+        # Charged-back payments surface in the navbar bell (the state mapping
+        # deliberately keeps chargebacks transition-less). The stock
+        # notifications template renders plain messages only, so the component
+        # template is swapped for one that can also render a link per
+        # notification - here, to the EveryPay merchant portal.
+        'sylius_admin.common.component.navbar.items':
+            notifications:
+                component: 'sylius_admin:navbar:notifications'
+                props:
+                    template: '@PkgSyliusEveryPayPlugin/admin/shared/components/navbar/notifications.html.twig'
+                priority: 100

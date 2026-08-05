@@ -1,0 +1,65 @@
+{# Replaces @SyliusAdmin/shared/components/navbar/notifications.html.twig on
+   the sylius_admin:navbar:notifications component (see config/app/
+   twig_hooks.yaml): identical markup, extended with an optional link per
+   notification ("url" + "url_label" keys) - chargeback notifications link to
+   the EveryPay merchant portal. Message-only notifications from other
+   providers render exactly as with the stock template. If another plugin
+   swaps this template for its own, messages still read complete (they are
+   self-contained translated strings); only the link degrades away. #}
+{% if notifications_enabled|default(true) %}
+    {% import '@SyliusAdmin/shared/helper/dropdown.html.twig' as dropdown %}
+
+    <div class="nav-item" data-test-notifications-icon>
+        {% set dropdown_trigger %}
+            {% if notifications %}
+                <button class="nav-link nav-button justify-content-center px-0 text-body">
+                    {{ ux_icon('tabler:bell') }}
+                    <span class="badge bg-red" style="transform: translate(-3px, -9px)"></span>
+                </button>
+            {% else %}
+                <div class="nav-link px-0 text-body">
+                    {{ ux_icon('tabler:bell') }}
+                </div>
+            {% endif %}
+        {% endset %}
+
+        {% set dropdown_content %}
+            <div class="card" style="min-width: 15rem; max-width: 25rem">
+                {% if notifications is empty %}
+                    <div class="card-header">
+                        <h3 class="card-title">{{ 'sylius.ui.no_new_notifications'|trans }}</h3>
+                    </div>
+                {% else %}
+                    <div class="list-group list-group-flush list-group-hoverable">
+                        {% for notification in notifications %}
+                            <div class="list-group-item" data-test-notification>
+                                <div class="row align-items-center">
+                                    <div class="col-auto">
+                                        <span class="status-dot status-dot-animated bg-red d-block"></span>
+                                    </div>
+                                    <div class="col">
+                                        <div class="d-block mt-n1">
+                                            {{ notification.message|trans }}
+                                        </div>
+                                        {% if notification.url|default('') != '' %}
+                                            <a href="{{ notification.url }}" target="_blank" rel="noopener" class="small" data-test-notification-link>
+                                                {{ notification.url_label is defined ? notification.url_label|trans : notification.url }}
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endset %}
+
+        {{ dropdown.default({
+            class: 'dropdown-menu-card',
+            custom_trigger: dropdown_trigger,
+            content: dropdown_content,
+            direction: 'down-end'
+        }) }}
+    </div>
+{% endif %}

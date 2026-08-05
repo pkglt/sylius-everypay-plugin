@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Charged-back payments surface as admin navbar notifications (with a link
+  to the merchant portal for live payments) instead of only leaving a log
+  warning. The state handling is unchanged - a chargeback still never
+  transitions the Sylius payment; the dispute is resolved in the EveryPay
+  merchant portal, and the notification clears once the resolution callback
+  updates the stored state.
+
 ### Fixed
 
 - An admin refund rejected by EveryPay because the payment was already

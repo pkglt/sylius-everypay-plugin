@@ -23,5 +23,8 @@ final class PkgSyliusEveryPayExtension extends Extension
         if (isset($bundles['SyliusShopBundle'])) {
             $loader->load('services/integrations/sylius_shop.php');
         }
+        if (isset($bundles['SyliusAdminBundle'])) {
+            $loader->load('services/integrations/sylius_admin.php');
+        }
     }
 }

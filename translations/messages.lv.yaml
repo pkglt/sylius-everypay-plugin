@@ -25,3 +25,5 @@ pkg_everypay:
         back_to_order: 'Atpakaļ pie pasūtījuma'
         everypay_state: 'EveryPay statuss'
         merchant_portal: 'EveryPay tirgotāja portāls'
+        notifications:
+            charged_back: 'Pasūtījuma %order_number% maksājums tika apstrīdēts (chargeback) - pārskatiet strīdu EveryPay tirgotāja portālā.'
