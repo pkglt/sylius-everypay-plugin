@@ -121,20 +121,33 @@ final readonly class EveryPayOneOffPayloadFactory
     }
 
     /**
-     * Bank-statement text for Open Banking payments: "{channel} order {number}",
-     * reduced to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] - the
-     * SEPA set) and capped at 65 characters. Letters with diacritics are
-     * transliterated to their ASCII base first; deleting them outright would
-     * garble the shop name on the customer's statement.
+     * Bank-statement text for Open Banking payments: "{channel} ({number})" -
+     * a language-neutral noun phrase that still reads naturally when the
+     * EveryPay/LHV platform prefixes the refund transfer's copy of it with
+     * "Refund - ". Capped at 65 characters by trimming the channel name, so
+     * the order number always survives.
      */
     private function paymentDescription(OrderInterface $order): string
     {
-        $text = sprintf('%s order %s', (string) $order->getChannel()?->getName(), (string) $order->getNumber());
+        $suffix = sprintf('(%s)', $this->statementText((string) $order->getNumber()));
+        $name = $this->statementText((string) $order->getChannel()?->getName());
+        $name = rtrim(substr($name, 0, max(0, 65 - strlen($suffix) - 1)));
+
+        return substr(trim($name . ' ' . $suffix), 0, 65);
+    }
+
+    /**
+     * Reduces text to the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+ ] -
+     * the SEPA set). Letters with diacritics are transliterated to their
+     * ASCII base first; deleting them outright would garble the shop name on
+     * the customer's statement.
+     */
+    private function statementText(string $text): string
+    {
         $text = u($text)->ascii()->toString();
         $text = (string) preg_replace("#[^a-zA-Z0-9/?:().,'+ -]#", '', $text);
-        $text = trim((string) preg_replace('/\s+/', ' ', $text));
 
-        return substr($text, 0, 65);
+        return trim((string) preg_replace('/\s+/', ' ', $text));
     }
 
     private function resolveLocale(OrderInterface $order): string

@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   numbers pass through unchanged; a host app with a custom order number
   generator no longer risks the whole payment request being rejected. The
   payment-id suffix keeps the reference unique either way.
+- The Open Banking bank-statement text is now `{channel} ({number})` instead
+  of `{channel} order {number}` - the noun phrase reads naturally when the
+  platform prefixes the refund transfer's copy of it with `Refund - `, and
+  the 65-character cap now trims the channel name, never the order number.
 
 ### Fixed
 

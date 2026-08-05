@@ -44,7 +44,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame('203.0.113.7', $payload['customer_ip']);
         self::assertSame('LT', $payload['preferred_country']);
         // Diacritics are outside the SEPA statement charset and get transliterated.
-        self::assertSame('Knygu namai order 000123', $payload['payment_description']);
+        self::assertSame('Knygu namai (000123)', $payload['payment_description']);
         self::assertSame('Kaunas', $payload['billing_city']);
         self::assertSame('LT', $payload['billing_country']);
         self::assertSame('Savanorių pr. 1', $payload['billing_line1']);
@@ -88,7 +88,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertArrayNotHasKey('billing_state', $payload);
         self::assertSame('Berlin', $payload['billing_city']);
         // No channel stubbed: the description degrades to the order number.
-        self::assertSame('order 000009', $payload['payment_description']);
+        self::assertSame('(000009)', $payload['payment_description']);
     }
 
     public function testPaymentDescriptionTransliteratesDiacriticsAndStripsTheRest(): void
@@ -112,10 +112,10 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
             self::CUSTOMER_URL,
         );
 
-        self::assertSame('Zasu ukis Maja Oo order 000042', $payload['payment_description']);
+        self::assertSame('Zasu ukis Maja Oo (000042)', $payload['payment_description']);
     }
 
-    public function testPaymentDescriptionIsCappedAtSixtyFiveCharacters(): void
+    public function testPaymentDescriptionCapTrimsTheChannelNameAndKeepsTheOrderNumber(): void
     {
         $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
 
@@ -135,7 +135,8 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
 
         $description = $payload['payment_description'];
         self::assertIsString($description);
-        self::assertSame(65, strlen($description));
+        self::assertLessThanOrEqual(65, strlen($description));
+        self::assertStringEndsWith('(000010)', $description);
         self::assertMatchesRegularExpression("#^[a-zA-Z0-9/?:().,'+ -]+$#", $description);
     }
 
