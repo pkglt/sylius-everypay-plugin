@@ -129,7 +129,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
 
     private function provider(): EveryPayHttpResponseProvider
     {
-        return new EveryPayHttpResponseProvider($this->createMock(Environment::class), new MethodGridViewFactory());
+        return new EveryPayHttpResponseProvider($this->createStub(Environment::class), new MethodGridViewFactory());
     }
 
     private function requestConfiguration(): RequestConfiguration

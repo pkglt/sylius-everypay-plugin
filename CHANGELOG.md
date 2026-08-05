@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   merchant portal, and the notification clears once the resolution callback
   updates the stored state.
 
+### Changed
+
+- The test suite runs on PHPUnit 11/12 (`^11.5 || ^12.5`, was the EOL
+  `^10.5`): PHP 8.3+ resolves PHPUnit 12, PHP 8.2 stays on PHPUnit 11.
+  Dev-only - nothing changes for consumers of the plugin.
+
 ### Fixed
 
 - An admin refund rejected by EveryPay because the payment was already
