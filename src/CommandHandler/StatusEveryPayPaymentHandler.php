@@ -46,7 +46,7 @@ final readonly class StatusEveryPayPaymentHandler
                 'payment_id' => $payment->getId(),
                 'exception' => $e,
             ]);
-            $paymentRequest->setResponseData(['error' => $e->getMessage()]);
+            $paymentRequest->setResponseData(['error' => EveryPayGateway::ERROR_GATEWAY_UNAVAILABLE]);
             $this->stateMachine->apply(
                 $paymentRequest,
                 PaymentRequestTransitions::GRAPH,

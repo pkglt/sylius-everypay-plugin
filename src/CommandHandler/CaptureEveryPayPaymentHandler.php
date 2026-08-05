@@ -94,7 +94,7 @@ final readonly class CaptureEveryPayPaymentHandler
                 'payment_id' => $payment->getId(),
                 'exception' => $e,
             ]);
-            $this->fail($paymentRequest, $payment, $e->getMessage());
+            $this->fail($paymentRequest, $payment, EveryPayGateway::ERROR_GATEWAY_UNAVAILABLE);
 
             return;
         }
@@ -106,7 +106,7 @@ final readonly class CaptureEveryPayPaymentHandler
                 'payment_id' => $payment->getId(),
                 'response' => $response,
             ]);
-            $this->fail($paymentRequest, $payment, 'EveryPay response is missing payment_reference or payment_link.');
+            $this->fail($paymentRequest, $payment, EveryPayGateway::ERROR_INVALID_GATEWAY_RESPONSE);
 
             return;
         }
@@ -142,9 +142,10 @@ final readonly class CaptureEveryPayPaymentHandler
         );
     }
 
-    private function fail(PaymentRequestInterface $paymentRequest, PaymentInterface $payment, string $reason): void
+    /** @param string $errorCode an EveryPayGateway::ERROR_* indicator, never raw exception or gateway text */
+    private function fail(PaymentRequestInterface $paymentRequest, PaymentInterface $payment, string $errorCode): void
     {
-        $paymentRequest->setResponseData(['error' => $reason]);
+        $paymentRequest->setResponseData(['error' => $errorCode]);
 
         $this->stateMachine->apply(
             $paymentRequest,

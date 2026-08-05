@@ -73,7 +73,12 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
 
         $handler(new CaptureEveryPayPayment('hash'));
 
-        self::assertArrayHasKey('error', $paymentRequest->getResponseData());
+        // A generic code only - the exception message carries the api_username
+        // and the gateway body, and responseData reaches the shopper.
+        self::assertSame(
+            ['error' => EveryPayGateway::ERROR_GATEWAY_UNAVAILABLE],
+            $paymentRequest->getResponseData(),
+        );
         self::assertSame(
             [
                 [$paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_FAIL],
@@ -107,7 +112,10 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
 
         // A 2xx response without the hosted page link is as unusable as an
         // API error: fail the attempt so the customer gets a fresh payment.
-        self::assertArrayHasKey('error', $paymentRequest->getResponseData());
+        self::assertSame(
+            ['error' => EveryPayGateway::ERROR_INVALID_GATEWAY_RESPONSE],
+            $paymentRequest->getResponseData(),
+        );
         self::assertSame(
             [
                 [$paymentRequest, PaymentRequestTransitions::GRAPH, PaymentRequestTransitions::TRANSITION_FAIL],

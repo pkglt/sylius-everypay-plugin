@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Pkg\SyliusEveryPayPlugin\Unit\Client;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiClient;
 use Pkg\SyliusEveryPayPlugin\Client\EveryPayApiException;
@@ -147,5 +148,60 @@ final class EveryPayApiClientTest extends TestCase
         $this->expectException(EveryPayApiException::class);
 
         $client->getPayment($this->credentials(), 'abc123def456abc1');
+    }
+
+    /**
+     * Failure messages are persisted into payment request responseData, which
+     * the shop API serializes for the customer - the api_username half of the
+     * Basic-auth pair must not ride along, neither from the request URL nor
+     * from a gateway response echoing it back.
+     *
+     * @param list<string> $expectedFragments
+     */
+    #[DataProvider('credentialLeakingFailures')]
+    public function testFailureMessagesKeepTheEndpointButNotTheApiUsername(MockResponse $response, array $expectedFragments): void
+    {
+        $client = new EveryPayApiClient(new MockHttpClient($response));
+
+        try {
+            $client->getPayment($this->credentials(), 'abc123def456abc1');
+            self::fail('The failing request did not throw.');
+        } catch (EveryPayApiException $exception) {
+            $message = $exception->getMessage();
+
+            self::assertStringNotContainsString('a04e7ce1060e7024', $message);
+            self::assertStringNotContainsString('api_username=', $message);
+
+            // Log handlers walk the chain, so a linked exception must stay clean too.
+            for ($linked = $exception->getPrevious(); $linked !== null; $linked = $linked->getPrevious()) {
+                self::assertStringNotContainsString('a04e7ce1060e7024', $linked->getMessage());
+            }
+
+            foreach ($expectedFragments as $fragment) {
+                self::assertStringContainsString($fragment, $message);
+            }
+        }
+    }
+
+    /** @return iterable<string, array{MockResponse, list<string>}> */
+    public static function credentialLeakingFailures(): iterable
+    {
+        yield 'transport error quoting the request URL' => [
+            new MockResponse('', ['error' => 'Could not resolve host for "https://igw-demo.every-pay.com/api/v4/payments/abc123def456abc1?api_username=a04e7ce1060e7024"']),
+            ['GET /v4/payments/abc123def456abc1 failed', 'Could not resolve host'],
+        ];
+
+        yield 'error body echoing the api_username' => [
+            new MockResponse(
+                json_encode(['error' => ['code' => 4013, 'message' => 'Unknown api_username a04e7ce1060e7024']], \JSON_THROW_ON_ERROR),
+                ['http_code' => 401],
+            ),
+            ['HTTP 401 to GET /v4/payments/abc123def456abc1', 'Unknown api_username [redacted]'],
+        ];
+
+        yield 'non-JSON body echoing the api_username' => [
+            new MockResponse('<html>api_username a04e7ce1060e7024 blocked</html>'),
+            ['non-JSON body to GET /v4/payments/abc123def456abc1', 'api_username [redacted] blocked'],
+        ];
     }
 }

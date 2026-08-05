@@ -54,6 +54,16 @@ final class EveryPayGateway
     /** Key inside Payment::getDetails() holding the EveryPay payment snapshot. */
     public const DETAILS_KEY = 'everypay';
 
+    /**
+     * Indicators for responseData['error']. Sylius serializes responseData to the
+     * shopper, so raw exception text must never go there - it carries the
+     * api_username and the gateway body. Detail belongs in the everypay log only.
+     */
+    public const ERROR_GATEWAY_UNAVAILABLE = 'gateway_unavailable';
+
+    /** EveryPay answered 2xx, but without the fields the flow needs. */
+    public const ERROR_INVALID_GATEWAY_RESPONSE = 'invalid_gateway_response';
+
     /** Sent as integration_details.integration (EveryPay merchant telemetry). */
     public const INTEGRATION_NAME = 'pkglt/sylius-everypay-plugin';
 
