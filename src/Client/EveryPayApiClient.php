@@ -108,12 +108,24 @@ final readonly class EveryPayApiClient
             $options['json'] = $body;
         }
 
+        // Exception messages reach logs and responseData, so they quote the
+        // endpoint rather than $path, whose query string carries api_username.
+        $endpoint = $this->endpoint($path);
+
         try {
             $response = $this->httpClient->request($method, $credentials->baseUrl . $path, $options);
             $statusCode = $response->getStatusCode();
             $content = $response->getContent(false);
         } catch (HttpClientExceptionInterface $e) {
-            throw new EveryPayApiException(sprintf('EveryPay request %s %s failed: %s', $method, $path, $e->getMessage()), previous: $e);
+            // Transport messages quote the full request URL back at us.
+            $reason = str_replace($credentials->baseUrl . $path, $credentials->baseUrl . $endpoint, $e->getMessage());
+
+            throw new EveryPayApiException(sprintf(
+                'EveryPay request %s %s failed: %s',
+                $method,
+                $endpoint,
+                $this->redactCredentials($reason, $credentials),
+            ), previous: $e);
         }
 
         $data = json_decode($content, true);
@@ -123,19 +135,48 @@ final readonly class EveryPayApiClient
                 'EveryPay responded HTTP %d to %s %s: %s',
                 $statusCode,
                 $method,
-                $path,
-                $this->extractErrorMessage($data, $content),
+                $endpoint,
+                $this->redactCredentials($this->extractErrorMessage($data, $content), $credentials),
             ), $statusCode);
         }
 
         if (!is_array($data)) {
-            throw new EveryPayApiException(sprintf('EveryPay returned a non-JSON body to %s %s: %s', $method, $path, $content), $statusCode);
+            throw new EveryPayApiException(sprintf(
+                'EveryPay returned a non-JSON body to %s %s: %s',
+                $method,
+                $endpoint,
+                $this->redactCredentials($content, $credentials),
+            ), $statusCode);
         }
 
         /** @var array<string, mixed> $decoded */
         $decoded = $data;
 
         return $decoded;
+    }
+
+    /** The path without its query string, which carries api_username on every GET. */
+    private function endpoint(string $path): string
+    {
+        $queryPosition = strpos($path, '?');
+
+        return false === $queryPosition ? $path : substr($path, 0, $queryPosition);
+    }
+
+    /** Scrubs credentials from text we do not control: transport messages and gateway error bodies. */
+    private function redactCredentials(string $message, EveryPayCredentials $credentials): string
+    {
+        $secrets = array_values(array_unique(array_filter([
+            $credentials->apiUsername,
+            rawurlencode($credentials->apiUsername),
+            $credentials->apiSecret,
+        ], static fn (string $secret): bool => '' !== $secret)));
+
+        if ([] === $secrets) {
+            return $message;
+        }
+
+        return str_replace($secrets, '[redacted]', $message);
     }
 
     private function extractErrorMessage(mixed $data, string $fallback): string

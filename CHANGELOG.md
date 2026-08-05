@@ -45,6 +45,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   payment completes its refund transition with the fresh snapshot. Any other
   rejection still rolls back and keeps the payment `completed`.
 
+### Security
+
+- EveryPay API error messages no longer carry the `api_username` - half of the
+  HTTP Basic credential pair, which rides in the query string of every GET call.
+  Messages now quote the endpoint without its query string, and credential values
+  echoed back in a gateway error body or quoted in a transport error are redacted.
+
 ## [0.5.0] - 2026-08-04
 
 ### Added
