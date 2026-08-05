@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The test suite runs on PHPUnit 11/12 (`^11.5 || ^12.5`, was the EOL
   `^10.5`): PHP 8.3+ resolves PHPUnit 12, PHP 8.2 stays on PHPUnit 11.
   Dev-only - nothing changes for consumers of the plugin.
+- `doctrine/orm` 3.6.8 is excluded from the dev dependencies. It calls the
+  DBAL `Schema::edit()` API, which needs `doctrine/dbal` ^4.5, while Sylius 2.x
+  requires `doctrine/dbal` ^3.9 - so schema generation throws and every
+  functional test errors in `prepareDatabase()`. Dev-only, and a `require-dev`
+  entry rather than a `conflict` so consumers keep resolving their own graph;
+  drop it once a fixed 3.6.x is out.
 - Billing/shipping address fields in the one-off payment request are
   truncated to the character limits EveryPay enforces from 2026-10-01
   (city/street 50 characters, postcode 16), so an over-long address keeps
