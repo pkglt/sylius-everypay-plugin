@@ -139,6 +139,44 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertMatchesRegularExpression("#^[a-zA-Z0-9/?:().,'+ -]+$#", $description);
     }
 
+    public function testOrderReferenceIsSanitizedAndCappedForCustomOrderNumbers(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 7,
+                // Diacritics transliterate, the hash and spaces are outside
+                // the order_reference charset and get stripped.
+                orderNumber: 'UŽS #123 (web)',
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: null,
+                shippingAddress: null,
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame('UZS123(web)-7', $payload['order_reference']);
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 12345,
+                orderNumber: str_repeat('9', 150),
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: null,
+                shippingAddress: null,
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        // Capped under the 120-char Open Banking limit, payment-id suffix intact.
+        self::assertSame(str_repeat('9', 100) . '-12345', $payload['order_reference']);
+    }
+
     public function testAddressFieldsAreTruncatedToTheUpcomingCharacterLimits(): void
     {
         $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));

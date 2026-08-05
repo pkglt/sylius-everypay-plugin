@@ -56,9 +56,7 @@ final readonly class EveryPayOneOffPayloadFactory
 
         $payload = [
             'amount' => EveryPayGateway::amountToDecimal((int) $payment->getAmount()),
-            // Unique per payment attempt: EveryPay validates order_reference
-            // uniqueness per shop, and Sylius creates a new Payment per retry
-            'order_reference' => sprintf('%s-%d', (string) $order->getNumber(), (int) $payment->getId()),
+            'order_reference' => $this->orderReference($order, $payment),
             'customer_url' => $customerUrl,
             'locale' => $this->resolveLocale($order),
             'payment_description' => $this->paymentDescription($order),
@@ -102,6 +100,24 @@ final readonly class EveryPayOneOffPayloadFactory
         }
 
         return 'dev';
+    }
+
+    /**
+     * "{orderNumber}-{paymentId}" - unique per payment attempt: EveryPay
+     * validates order_reference uniqueness per shop, and Sylius creates a new
+     * Payment per retry. The order number is transliterated and reduced to
+     * the charset EveryPay accepts ([a-zA-Z0-9/-?:().,'+] - no spaces) and
+     * capped at 100 characters so the reference stays under the Open Banking
+     * limit of 120: Sylius' default numeric order numbers pass untouched,
+     * and the payment-id suffix keeps the reference unique regardless of
+     * what sanitization does to a custom one.
+     */
+    private function orderReference(OrderInterface $order, PaymentInterface $payment): string
+    {
+        $number = u((string) $order->getNumber())->ascii()->toString();
+        $number = (string) preg_replace("#[^a-zA-Z0-9/?:().,'+-]#", '', $number);
+
+        return sprintf('%s-%d', substr($number, 0, 100), (int) $payment->getId());
     }
 
     /**

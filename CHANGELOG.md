@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   truncated to the character limits EveryPay enforces from 2026-10-01
   (city/street 50 characters, postcode 16), so an over-long address keeps
   feeding card fraud scoring instead of risking a rejected payment request.
+- The `order_reference` sent to EveryPay is transliterated and reduced to
+  the charset the API accepts, with the order-number prefix capped at 100
+  characters (the Open Banking limit is 120). Sylius' default numeric order
+  numbers pass through unchanged; a host app with a custom order number
+  generator no longer risks the whole payment request being rejected. The
+  payment-id suffix keeps the reference unique either way.
 
 ### Fixed
 
