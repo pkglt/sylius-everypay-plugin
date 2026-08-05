@@ -42,25 +42,35 @@ status query string.
    - `timestamp` (ISO 8601, must be within +/-5 min of EveryPay server time),
    - `customer_url` (absolute return URL; FQDN required - no dotless host, no IP).
 
-   Useful optional: `locale` (`lt`, `en`, `lv`, `et`, `ru`, ...), `email`,
-   `customer_ip`, `preferred_country` (`EE`/`LV`/`LT` - pre-selects the Open
-   Banking country tab), `billing_*`/`shipping_*` address fields (improve card
-   fraud scoring; card limits shrink without them from 2026-10),
-   `payment_description` (Open Banking statement text, ~65 chars, charset
-   `[a-zA-Z0-9/-?:().,'+]` - `order_reference` shares the same charset),
-   `integration_details {integration, software, version}`.
+   Useful optional: `locale` (`lt`, `en`, `lv`, `et`, `ru`, ...), `email` and
+   `phone_number {country_code, number}` (both flagged by the spec as "soon
+   mandatory for all card payment requests" - upcoming Visa/Mastercard
+   requirements), `customer_ip`, `preferred_country` (`EE`/`LV`/`LT` -
+   pre-selects the Open Banking country tab), `billing_*`/`shipping_*` address
+   fields (improve card fraud scoring; omitting them for card payments "may
+   result in higher decline rates, degraded fraud screening, or limited
+   dispute resolution"; from 2026-10-01 the character limits shrink -
+   city/line1 50, postcode 16, country strict ISO alpha-2, `billing_state`
+   ISO 3166-2), `payment_description` (Open Banking statement text, ~65
+   chars, charset `[a-zA-Z0-9/-?:().,'+]` - `order_reference` shares the same
+   charset and caps at 255 chars for cards / 120 for Open Banking),
+   `structured_reference` (Open Banking structured payment reference,
+   country-specific formats), `integration_details {integration, software,
+   version}`.
 2. Response `201`: `payment_reference` (64-char hex, the EveryPay payment id),
    `payment_link` (hosted payment page), `payment_state: initial`, `currency`,
    `payment_methods[]`.
 3. Redirect the customer to `payment_link`. They pick card / bank link /
-   wallet there (Apple Pay & Google Pay come free with the hosted page).
+   wallet / PayPal there (Apple Pay & Google Pay come free with the hosted
+   page).
 4. The customer returns to `customer_url` - EveryPay appends
    `?payment_reference=...&order_reference=...`. **Treat the return exactly like a
    callback: verify server-side, never trust query params.**
 5. A server-to-server callback (see below) arrives in parallel - whichever
    comes first wins; both paths converge on the status query.
 6. `GET /v4/payments/{payment_reference}?api_username=...` -> authoritative
-   `payment_state`.
+   `payment_state`. Optional `detailed=true` adds
+   `detailed_fraud_check_results` (the portal's "Fraud Check Results" panel).
 
 ## Callback notifications
 
@@ -72,8 +82,14 @@ status query string.
   `order_reference` (deprecated - scheduled for removal, do not rely on it),
   `event_name`.
 - `event_name` values: `status_updated`, `abandoned`, `voided`, `refunded`,
-  `refund_failed`, `chargebacked`, `marked_for_capture`, fraud/dispute events,
-  token events.
+  `refund_failed`, `chargebacked`, `marked_for_capture`,
+  `issuer_reported_fraudulent`, `merchant_reported_fraudulent`,
+  `dispute_opened` / `dispute_updated` / `dispute_reversed` /
+  `dispute_charged_back` / `dispute_reopened`, `card_art_updated`,
+  `token_updated`, and - easy to confuse with `status_updated` -
+  `status_update`: acquiring completed, funds received on the merchant
+  account (pairs with the `acquiring_completed_at` status field; only sent
+  when the acquiring bank supports it).
 - **Callbacks are not signed/authenticated.** The only safe reaction is to
   re-query `GET /v4/payments/{payment_reference}` over authenticated TLS and
   act on that. This plugin does exactly that.
@@ -110,12 +126,34 @@ Notes:
   For other banks, refund OB payments manually from the bank and use the API
   call to keep statuses in sync.
 
+Payer-visible statement texts (not in the API docs; confirmed 2026-08 on
+both the merchant's and the payer's statements - both carry the same texts):
+
+- OB payment: the description line is `payment_description`; the
+  counterparty is the merchant name transliterated to the SEPA restricted
+  charset by the payment-initiation rails (uppercased, diacritics and
+  quotation marks reduced).
+- LHV-executed OB refund: the description is the original
+  `payment_description` prefixed with `Refund - `. The refund API has no
+  text field - the text is composed on the EveryPay/LHV side and is not
+  integrator-controllable. This record's counterparty is the account-holder
+  name as registered at LHV (full diacritics), so the payer can see the
+  same merchant under two spellings across the pair.
+- Card payments/refunds never carry `payment_description`; card statements
+  show the shop `descriptor` (+ MCC) set at onboarding (see `/v4/shops`).
+
 ## Other endpoints (not used by this plugin, available)
 
 `/v4/payments/cit|mit|charge` (token payments), `/v4/agreements`
 (recurring/subscription), `/v4/tokens/*`, `/v4/payments/capture` + `/void`
 (manual-capture accounts), `/v4/shops`, `/v4/processing_accounts`,
 `/v4/mobile_payments/card_details` (in-app payments).
+
+Token-related oneoff extras: `request_token` + `token_agreement`
+(`unscheduled`/`recurring` - the agreement of a follow-up CIT/MIT must match
+the one used at tokenization), `token_consent_agreed` (merchant carries the
+token consent in its own T&C - hides the save-card checkbox on the hosted
+page), `amount: 0` saves a card without any purchase.
 
 ## Payment Elements (embedded checkout)
 
