@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The customer's phone number is sent with the payment request as
+  `phone_number` (dialling code and national number, as EveryPay takes it),
+  feeding 3DS authentication in every display mode - the card schemes are
+  about to require it. The billing address phone is used, else the customer
+  profile's. Sylius stores phone numbers as free text, so they are split
+  conservatively: international notation for the listed European countries,
+  national notation by the billing country's dialling rules, and anything
+  else is left out rather than guessed.
+
+### Changed
+
+- Address fields follow EveryPay's revised card address rules (merchant
+  notice of 2026-09-21: demo from 2026-11-01, production from 2027-01-04,
+  when non-conforming requests start being rejected). City and street are
+  shortened at a word boundary instead of mid-word, keeping the leading
+  street name and house number. A postcode, state or country that does not
+  fit is left out rather than cut, because a cut code is a wrong one. Shipping
+  fields are no longer sent for orders that need no shipping (digital goods,
+  services), as EveryPay asks. Country stays ISO alpha-2, which remains valid.
+  The 0.6.0 entry's "from 2026-10-01" date was superseded by the revised
+  timeline.
+
 ## [0.7.0] - 2026-10-07
 
 ### Added
