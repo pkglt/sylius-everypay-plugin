@@ -152,6 +152,7 @@ final readonly class CaptureEveryPayPaymentHandler
                     'locale' => $payload['locale'],
                     'email' => $payload['email'] ?? null,
                     'preferred_country' => $payload['preferred_country'] ?? null,
+                    'phone_number' => $payload['phone_number'] ?? null,
                 ];
             } else {
                 // Keep the attempt alive - EveryPayHttpResponseProvider falls

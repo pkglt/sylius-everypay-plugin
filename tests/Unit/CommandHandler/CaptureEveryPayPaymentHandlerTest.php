@@ -17,6 +17,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
@@ -159,7 +160,7 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
 
     public function testElementsModeRequestsAMobilePaymentAndStoresTheElementsData(): void
     {
-        $paymentRequest = $this->paymentRequest(displayMode: EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS);
+        $paymentRequest = $this->paymentRequest(displayMode: EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS, customerPhone: '+370 612 34567');
         $apiResponse = new MockResponse(json_encode([
             'payment_reference' => self::PAYMENT_REFERENCE,
             'payment_link' => self::PAYMENT_LINK,
@@ -181,6 +182,9 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         self::assertSame($sentBody['order_reference'], $elements['order_reference']);
         self::assertSame(25.99, $elements['amount']);
         self::assertSame('lt', $elements['locale']);
+        // The same split phone feeds 3DS and the SDK's Click to Pay lookup.
+        self::assertSame(['country_code' => '370', 'number' => '61234567'], $sentBody['phone_number'] ?? null);
+        self::assertSame($sentBody['phone_number'], $elements['phone_number']);
     }
 
     public function testElementsModeWithoutATokenStillStoresTheHostedPageLink(): void
@@ -223,12 +227,18 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         self::assertArrayNotHasKey('payment_elements', $paymentRequest->getResponseData());
     }
 
-    private function paymentRequest(?string $paymentCurrency = null, ?string $displayMode = null): PaymentRequest
+    private function paymentRequest(?string $paymentCurrency = null, ?string $displayMode = null, ?string $customerPhone = null): PaymentRequest
     {
+        $customer = null;
+        if (null !== $customerPhone) {
+            $customer = $this->createStub(CustomerInterface::class);
+            $customer->method('getPhoneNumber')->willReturn($customerPhone);
+        }
+
         $order = $this->createStub(OrderInterface::class);
         $order->method('getNumber')->willReturn('000123');
         $order->method('getLocaleCode')->willReturn('lt_LT');
-        $order->method('getCustomer')->willReturn(null);
+        $order->method('getCustomer')->willReturn($customer);
         $order->method('getCustomerIp')->willReturn('203.0.113.7');
         $order->method('getBillingAddress')->willReturn(null);
         $order->method('getShippingAddress')->willReturn(null);
