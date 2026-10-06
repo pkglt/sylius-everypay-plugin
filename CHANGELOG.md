@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Address fields follow EveryPay's revised card address rules (merchant
+  notice of 2026-09-21: demo from 2026-11-01, production from 2027-01-04,
+  when non-conforming requests start being rejected). City and street are
+  shortened at a word boundary instead of mid-word, keeping the leading
+  street name and house number. A postcode, state or country that does not
+  fit is left out rather than cut, because a cut code is a wrong one. Shipping
+  fields are no longer sent for orders that need no shipping (digital goods,
+  services), as EveryPay asks. Country stays ISO alpha-2, which remains valid.
+  The 0.6.0 entry's "from 2026-10-01" date was superseded by the revised
+  timeline.
+
 ## [0.7.0] - 2026-10-07
 
 ### Added
