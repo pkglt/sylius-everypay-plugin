@@ -160,10 +160,10 @@ source of truth.
   templates/shop/method_grid.html.twig or
   templates/shop/payment_elements.html.twig instead of redirecting. Always
   keep the redirect fallback - EveryPay may return no per-method links and
-  no mobile_access_token. The Payment Elements mode is **experimental**: the
-  SDK is undocumented for custom integrations; the reverse-engineered
-  contract lives in docs/everypay-api.md and must not be extended without
-  re-verifying against EveryPay's own WooCommerce plugin or their answer.
+  no mobile_access_token. The Payment Elements mode is **experimental**: build
+  only on what EveryPay's Payment Elements integration guide documents
+  (summarized in docs/everypay-api.md), and re-verify against the live SDK
+  bundle - it changes under the same URL - before relying on new behaviour.
 - `EveryPayGateway` holds all shared constants (factory name, config keys,
   base URLs, payment-details helpers). Don't scatter string literals.
 - **The after-pay URL is a seam** (`Provider/AfterPayUrlProviderInterface`):
@@ -214,6 +214,5 @@ Partial refunds via `sylius/refund-plugin` (adoption path documented in
 `docs/architecture.md` - the workflow listener must be guarded when adopted)
 and tokenized/CIT payments. The embedded in-shop checkout via the EveryPay
 Payment Elements JS SDK is implemented as the experimental `payment_elements`
-display mode - built against the reverse-engineered contract of EveryPay's
-own WooCommerce 2.x plugin, awaiting EveryPay's confirmation for custom
-integrations (see docs/everypay-api.md).
+display mode, following EveryPay's merchant integration guide; it leaves
+experimental status once it has run in production (see docs/everypay-api.md).

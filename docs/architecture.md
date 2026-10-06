@@ -155,12 +155,13 @@ No DB migration: only core entities (`sylius_payment`,
   modes share the same oneoff flow and differ only in how the customer
   reaches the payment page - so `display_mode` stays gateway config, not a
   namespace.
-- The Payment Elements mode is **experimental**: the SDK is undocumented for
-  custom integrations (docs/everypay-api.md#payment-elements-embedded-checkout
-  records the reverse-engineered contract; EveryPay's WooCommerce 2.x plugin
-  is the reference). Until EveryPay confirms it, its template/JS and the
-  `payment_elements` responseData blob are exempt from the stability
-  contract below, and every render path keeps the hosted redirect fallback.
+- The Payment Elements mode is **experimental**: EveryPay documents the SDK
+  for custom integrations (merchant integration guide, 2026-09; summarized in
+  docs/everypay-api.md#payment-elements-embedded-checkout), but the bundle
+  changes under the same URL and the mode has not run in production yet.
+  Until it has, its template/JS and the `payment_elements` responseData blob
+  are exempt from the stability contract below, and every render path keeps
+  the hosted redirect fallback.
 - Notify resolution keeps the DQL `LIKE`: `JSON_EXTRACT` is not portable
   across MySQL/MariaDB/PostgreSQL/SQLite in DQL, and a dedicated indexed
   column would force the migration this plugin deliberately avoids. The

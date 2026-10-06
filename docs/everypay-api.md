@@ -192,48 +192,58 @@ page), `amount: 0` saves a card without any purchase.
 
 ## Payment Elements (embedded checkout)
 
-EveryPay also has an embedded web checkout - the **Payment Elements** JS SDK
-its own platform plugins (WooCommerce 2.x, Magento, PrestaShop) mount in-page:
+EveryPay's embedded web checkout is the **Payment Elements** JS SDK -
 `{base host}/payment_elements/everypay-sdk-v1-0-0.umd.js` (UMD, global
-`EveryPay`). This plugin implements it as the **experimental
-`payment_elements` display mode**. No public documentation exists; the
-de-facto contract below was extracted from EveryPay's own WooCommerce 2.0.4
-plugin and the SDK bundle itself (build hash `74a259a625`, byte-identical on
-the demo and production hosts as of 2026-07):
+`EveryPay`). EveryPay documents it for custom integrations in a merchant
+integration guide attached to the help-centre article
+[Payment Elements](https://support.every-pay.com/en/articles/16626823-payment-elements)
+(published 2026-09-10). This plugin implements it as the **experimental
+`payment_elements` display mode**. The contract it relies on:
 
-- Create a normal oneoff with the extra field **`mobile_payment: true`** -
-  the response then carries a **`mobile_access_token`** (used by the SDK as
-  a Bearer token for the Apple/Google Pay `payment_data` endpoints; card and
-  bank flows work without it, but the SDK requires it in the intent).
+- Create a normal oneoff with **`mobile_payment: true`** - without it the
+  response carries no **`mobile_access_token`**, which `confirm()` needs as
+  its `bearerToken`.
 - In the page: `new EveryPay({account, username})` -> `.secureElements({
-  amount, locale, environment: 'demo'|'production', preferredCountry?,
-  email?, stylingOptions: {theme: 'light', layout: 'tabs'|'accordion'}})`
-  -> `.build({element: 'payment'})` -> `await element.mount('#selector')`.
-  The element is an iframe of `{base host}/el/v3` (postMessage protocol,
-  auto-resizing); it lists methods via the unauthenticated
-  `GET /v4/sdk/payment_methods/{account_name}`.
-- `element.submit()` validates/collects inside the iframe and resolves
-  `{error: string|null}`. Card data never touches the shop page - EveryPay's
-  [PCI DSS SAQ article](https://support.every-pay.com/en/articles/11163626-pci-dss-self-assessment-questionnaires)
-  classifies Payment Elements as **SAQ A** (their "SDK(s) -> SAQ A-EP" row
-  refers to the mobile app SDKs).
+  stylingOptions: {theme: 'light', layout: 'tabs'|'accordion'}, amount,
+  locale, environment: 'demo'|'production', preferredCountry?, email?,
+  phoneNumber?: {countryCode, phoneNumber}, allowedPaymentMethods?,
+  tokenization?})` -> `.build({element: 'payment'})` ->
+  `await element.mount('#selector')`. Omit an unknown optional field
+  entirely rather than passing an empty value. The element is an iframe of
+  `{base host}/el/v3`.
+- `element.submit()` validates inside the iframe. It **rejects** for most
+  invalid input (card number, name, CVC, expiry) but **resolves with
+  `{error}`** when no method is selected - handle both.
 - `element.confirm({accountName, apiUsername, bearerToken, orderReference,
-  paymentLink, returnURL, paymentReference})` finalizes and **always ends in
-  a top-window redirect**: to `returnURL?payment_reference=...` (the normal
-  customer return), into a 3DS challenge on the hosted page first, or - for
-  bank methods - to `payment_link?method_source={bank}` exactly like the
-  method grid. Nothing changes server-side: the return/callback/status flow
-  stays authoritative.
-- There is also a `managed` element variant (the iframe renders its own pay
-  button, driven via an `onPaymentConfirmed` hook); no known production
-  integration uses it, so this plugin sticks to `payment`.
+  paymentLink, returnURL, paymentReference})` finalizes. Card, bank and
+  PayPal leave the page from within `confirm()` - to `returnURL`, into a 3DS
+  challenge, or to the bank - and it never returns. **Apple Pay and Google
+  Pay complete in the wallet sheet and `confirm()` resolves**, so the page
+  has to go to the return URL itself.
+- `element.paymentMethod` emits `change` events (`card` | `bank` |
+  `apple_pay` | `google_pay` | `paypal` | `null`);
+  `element.selectedPaymentMethod()` reads the current one.
+- Styling: CSS custom properties, read only from the mount container's
+  inline `style` attribute (not from stylesheets).
+- Card data never touches the shop page - EveryPay's
+  [PCI DSS SAQ article](https://support.every-pay.com/en/articles/11163626-pci-dss-self-assessment-questionnaires)
+  classifies Payment Elements as **SAQ A**.
+- **The `api_username` and processing account name are public in this
+  mode**: the SDK takes them in the browser by design, and only `api_secret`
+  must stay server-side. The redirect and method grid modes never send
+  either to the browser.
+- Wallets need HTTPS. Google Pay also needs its terms accepted in the
+  merchant portal (E-shop settings), and Apple Pay needs the portal's
+  domain-verification file served under `/.well-known/` and the domain
+  registered there.
+- Nothing changes server-side: the return/callback/status flow stays
+  authoritative.
 
-Status 2026-07: **still no public integration documentation** - the help
-center collections contain none, the bundle has changed under the same
-`v1-0-0` URL within days, and `/el/v3` + `/v4/sdk/*` are undocumented.
-support@every-pay.com has not yet confirmed the SDK for custom integrations -
-which is why the display mode ships marked experimental, and why the hosted
-page redirect fallback (no `mobile_access_token` -> redirect) must stay.
+The bundle changes under the same `v1-0-0` URL without notice (last seen
+changing 2026-10-05, byte-identical on the demo and production hosts). The
+mode stays experimental - with the hosted page redirect fallback whenever
+there is no `mobile_access_token` or the SDK fails to load - until it has
+run in production.
 
 ## Merchant portal setup checklist
 

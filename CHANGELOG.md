@@ -22,9 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wallet form on a page of the shop (`mobile_payment` one-offs; the card
   fields stay in EveryPay's iframe, keeping the integration SAQ A). Falls
   back to the hosted page redirect whenever EveryPay returns no
-  `mobile_access_token` or the SDK fails to load. Built against the SDK
-  contract of EveryPay's own WooCommerce 2.x plugin - the SDK is not yet
-  documented for custom integrations, so the mode is marked experimental.
+  `mobile_access_token` or the SDK fails to load. Follows EveryPay's
+  Payment Elements integration guide; the mode stays experimental until it
+  has run in production. In this mode the API username and processing
+  account are sent to the browser, as the SDK requires - the API secret
+  never is.
 
 ### Changed
 
