@@ -178,7 +178,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame(str_repeat('9', 100) . '-12345', $payload['order_reference']);
     }
 
-    public function testAddressFieldsAreTruncatedToTheUpcomingCharacterLimits(): void
+    public function testOverLongAddressFieldsAreFittedToTheCharacterLimits(): void
     {
         $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
 
@@ -189,19 +189,52 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
                 orderNumber: '000011',
                 localeCode: 'lt_LT',
                 email: null,
-                // Multibyte repeats prove the cut counts characters, not bytes.
+                // Multibyte repeats prove the limits count characters, not bytes.
                 billingAddress: $this->address(str_repeat('Ž', 60), 'LT', str_repeat('ą', 55), str_repeat('9', 20), 'LT-KU'),
                 shippingAddress: $this->address(str_repeat('Ū', 51), 'LT', 'Gedimino pr. 1', '01103'),
             ),
             self::CUSTOMER_URL,
         );
 
+        // A single over-long word has no boundary to cut at.
         self::assertSame(str_repeat('Ž', 50), $payload['billing_city']);
         self::assertSame(str_repeat('ą', 50), $payload['billing_line1']);
-        self::assertSame(str_repeat('9', 16), $payload['billing_postcode']);
+        // A cut postcode would be a wrong one - it is left out instead.
+        self::assertArrayNotHasKey('billing_postcode', $payload);
         self::assertSame('LT-KU', $payload['billing_state']);
         self::assertSame(str_repeat('Ū', 50), $payload['shipping_city']);
         self::assertSame('Gedimino pr. 1', $payload['shipping_line1']);
+        self::assertSame('01103', $payload['shipping_postcode']);
+    }
+
+    public function testOverLongAddressTextIsShortenedAtAWordBoundary(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000012',
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: $this->address(
+                    'Rietavo savivaldybės Daugėdų kaimo bendruomenės centras',
+                    'LT',
+                    "Laisvės alėja 101-12,\n Kauno miesto savivaldybė, Lietuvos Respublika",
+                    '44255',
+                ),
+                shippingAddress: $this->address('Kaunas', 'LT', str_repeat('a', 50) . ' tail', '44255'),
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        // Street and house number lead and survive; whitespace runs collapse
+        // and the dangling separator goes.
+        self::assertSame('Laisvės alėja 101-12, Kauno miesto savivaldybė', $payload['billing_line1']);
+        self::assertSame('Rietavo savivaldybės Daugėdų kaimo bendruomenės', $payload['billing_city']);
+        // A space right after the limit means the hard cut is already a word boundary.
+        self::assertSame(str_repeat('a', 50), $payload['shipping_line1']);
     }
 
     private function requestStackWithClientIp(?string $ip): RequestStack

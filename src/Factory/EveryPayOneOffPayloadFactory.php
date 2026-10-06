@@ -28,8 +28,9 @@ final readonly class EveryPayOneOffPayloadFactory
     private const PREFERRED_COUNTRIES = ['EE', 'LV', 'LT'];
 
     /**
-     * Character limits EveryPay enforces on address fields from 2026-10-01
-     * (255 across the board before that).
+     * Character limits EveryPay enforces on address fields - in demo from
+     * 2026-11-01, in production from 2027-01-04 (255 across the board before
+     * that). Over-long values are rejected, not cut, from then on.
      */
     private const ADDRESS_FIELD_LIMITS = [
         'city' => 50,
@@ -38,6 +39,9 @@ final readonly class EveryPayOneOffPayloadFactory
         'postcode' => 16,
         'state' => 255,
     ];
+
+    /** Free text that can be shortened; every other field is a code. */
+    private const TRUNCATABLE_ADDRESS_FIELDS = ['city', 'line1'];
 
     public function __construct(
         private RequestStack $requestStack,
@@ -159,10 +163,12 @@ final readonly class EveryPayOneOffPayloadFactory
     }
 
     /**
-     * Billing/shipping details improve card fraud scoring and will become
-     * increasingly expected by Visa/Mastercard. Values are capped at the
-     * upcoming character limits - a truncated address still feeds fraud
-     * scoring, an over-long one could fail the whole payment request.
+     * Billing/shipping details improve card fraud scoring and 3DS approval
+     * rates, so they are sent whenever known - but an over-long value fails
+     * the whole payment request. Free text is shortened at a word boundary,
+     * keeping the leading street name and house number EveryPay asks to
+     * prioritize; a code that does not fit (a cut postcode is a wrong
+     * postcode) is left out instead.
      *
      * @return array<string, string>
      */
@@ -180,11 +186,38 @@ final readonly class EveryPayOneOffPayloadFactory
             'postcode' => $address->getPostcode(),
             'state' => $address->getProvinceCode(),
         ] as $suffix => $value) {
-            if (null !== $value && '' !== $value) {
-                $fields[sprintf('%s_%s', $prefix, $suffix)] = mb_substr($value, 0, self::ADDRESS_FIELD_LIMITS[$suffix]);
+            $value = trim((string) preg_replace('/\s+/u', ' ', (string) $value));
+            $limit = self::ADDRESS_FIELD_LIMITS[$suffix];
+
+            if (in_array($suffix, self::TRUNCATABLE_ADDRESS_FIELDS, true)) {
+                $value = $this->shortenAtWordBoundary($value, $limit);
+            } elseif (mb_strlen($value) > $limit) {
+                continue;
+            }
+
+            if ('' !== $value) {
+                $fields[sprintf('%s_%s', $prefix, $suffix)] = $value;
             }
         }
 
         return $fields;
+    }
+
+    /** Character-based (diacritics count as one); a single over-long word is cut hard. */
+    private function shortenAtWordBoundary(string $value, int $limit): string
+    {
+        if (mb_strlen($value) <= $limit) {
+            return $value;
+        }
+
+        // One character past the limit: a space there means the cut already
+        // falls on a word boundary.
+        $head = mb_substr($value, 0, $limit + 1);
+        $lastSpace = mb_strrpos($head, ' ');
+        $head = false !== $lastSpace && $lastSpace > 0
+            ? mb_substr($head, 0, $lastSpace)
+            : mb_substr($value, 0, $limit);
+
+        return rtrim($head, ' ,;-');
     }
 }
