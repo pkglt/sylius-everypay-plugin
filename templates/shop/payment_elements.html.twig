@@ -65,24 +65,46 @@
                 window.location.replace(config.payment_intent.paymentLink);
             }
 
+            // Wallets complete inside their payment sheet, so confirm()
+            // resolves and the page has to move on by itself. Every other
+            // method leaves the page from within confirm() - back to the shop,
+            // into a 3DS challenge, or to the bank - and must not be raced.
+            var walletMethods = ['apple_pay', 'google_pay'];
+
+            function selectedMethod() {
+                return typeof element.selectedPaymentMethod === 'function' ? element.selectedPaymentMethod() : null;
+            }
+
+            function retry(message) {
+                showError(message);
+                payButton.disabled = false;
+            }
+
             payButton.addEventListener('click', function () {
                 payButton.disabled = true;
                 errorBox.classList.add('d-none');
+                var method = selectedMethod();
 
                 element.submit().then(function (result) {
+                    // Most validation failures reject; a missing method
+                    // selection resolves with an error instead.
                     if (result && result.error) {
-                        showError(result.error);
-                        payButton.disabled = false;
+                        retry(result.error);
 
                         return;
                     }
 
-                    // confirm() always ends in a top-window redirect (back to
-                    // the shop, or into a 3DS challenge first).
-                    return element.confirm(config.payment_intent);
-                }).catch(function () {
-                    showError(null);
-                    payButton.disabled = false;
+                    return element.confirm(config.payment_intent).then(function () {
+                        if (walletMethods.indexOf(method) !== -1) {
+                            window.location.assign(config.payment_intent.returnURL);
+                        }
+                    }, function () {
+                        retry(null);
+                    });
+                }, function (error) {
+                    // The SDK marks the invalid field itself; repeat its
+                    // message (e.g. "Invalid card number") next to the button.
+                    retry(error && error.message);
                 });
             });
 
