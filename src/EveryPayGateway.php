@@ -45,8 +45,8 @@ final class EveryPayGateway
 
     /**
      * Render the EveryPay Payment Elements embedded checkout inside the shop.
-     * Experimental: the SDK is undocumented for custom integrations - the
-     * de-facto contract is EveryPay's own WooCommerce 2.x plugin (see
+     * Experimental until it has run in production - the contract follows
+     * EveryPay's Payment Elements integration guide (see
      * docs/everypay-api.md#payment-elements-embedded-checkout).
      */
     public const DISPLAY_MODE_PAYMENT_ELEMENTS = 'payment_elements';
