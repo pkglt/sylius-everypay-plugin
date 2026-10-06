@@ -33,9 +33,13 @@ vendor/bin/phpstan analyse                  # level 9, src/ + tests/ (TestApplic
 vendor/bin/ecs check                        # Sylius Labs coding standard (--fix to autofix)
 ```
 
-All gates must pass before a change is done. CI runs a PHP 8.2/8.3/8.4 x
+All gates must pass before a change is done. CI runs a PHP 8.2-8.5 x
 highest/lowest dependency matrix (`ramsey/composer-install`
-dependency-versions) - lowest resolves the Symfony 6.4 line. When a lowest
+dependency-versions) - lowest resolves the Symfony 6.4 line; highest
+resolves Sylius 2.3 on PHP 8.3+ and the latest Sylius 2.2 on PHP 8.2 (2.3
+requires 8.3). Code touching Sylius or Symfony APIs must hold across both
+lines - see `EveryPayHttpResponseProvider`'s `Request|RequestConfiguration`
+parameter and the version-scoped phpstan ignore for examples. When a lowest
 build breaks on a transitive package's own bad constraints, prefer a
 require-dev floor (invisible to consumers, e.g. api-platform/json-schema,
 knplabs/knp-menu-bundle) over a `conflict` entry; reserve `conflict` for
