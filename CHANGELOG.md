@@ -17,6 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   conservatively: international notation for the listed European countries,
   national notation by the billing country's dialling rules, and anything
   else is left out rather than guessed.
+- Experimental embedded in-shop checkout via the EveryPay Payment Elements
+  JS SDK: a third "Checkout appearance" choice renders the card / bank /
+  wallet form on a page of the shop (`mobile_payment` one-offs; the card
+  fields stay in EveryPay's iframe, keeping the integration SAQ A). Falls
+  back to the hosted page redirect whenever EveryPay returns no
+  `mobile_access_token` or the SDK fails to load. Follows EveryPay's
+  Payment Elements integration guide; the mode stays experimental until it
+  has run in production. In this mode the API username and processing
+  account are sent to the browser, as the SDK requires - the API secret
+  never is. The customer's email and phone number are passed to the SDK so
+  Click to Pay can recognise a returning card.
 
 ### Changed
 
