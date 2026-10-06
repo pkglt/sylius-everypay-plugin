@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Sylius 2.3 support. Sylius 2.3 took the Payment Request API out of
+  experimental status and swapped `RequestConfiguration` for the plain
+  `Request` in `HttpResponseProviderInterface`, so the plugin hit a fatal
+  error as soon as `EveryPayHttpResponseProvider` loaded. The provider now
+  accepts either argument (`Request|RequestConfiguration`), which satisfies
+  both interface versions. Sylius 2.2 keeps working unchanged.
+- Symfony 8 is allowed (`symfony/string` `^8.0`), since Sylius 2.3 supports it.
+
 ## [0.6.0] - 2026-08-06
 
 ### Added

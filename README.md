@@ -56,8 +56,8 @@ country first):
 
 | | Version |
 |---|---|
-| PHP | 8.2+ |
-| Sylius | 2.2+ |
+| PHP | 8.2+ (8.3+ for Sylius 2.3) |
+| Sylius | 2.2+ (tested on 2.2 and 2.3) |
 
 Works with the standard Sylius shop frontend out of the box, and with
 headless/API-only stores (see [Headless checkouts](#headless--api-checkouts)).

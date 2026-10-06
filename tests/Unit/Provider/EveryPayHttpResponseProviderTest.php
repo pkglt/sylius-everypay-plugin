@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Provider\EveryPayHttpResponseProvider;
 use Pkg\SyliusEveryPayPlugin\Provider\MethodGridViewFactory;
-use Sylius\Bundle\ResourceBundle\Controller\RequestConfiguration;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
@@ -18,6 +17,7 @@ use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Payment\Model\PaymentRequest;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Twig\Environment;
 
 final class EveryPayHttpResponseProviderTest extends TestCase
@@ -29,9 +29,9 @@ final class EveryPayHttpResponseProviderTest extends TestCase
         $provider = $this->provider();
         $paymentRequest = $this->paymentRequest();
 
-        self::assertTrue($provider->supports($this->requestConfiguration(), $paymentRequest));
+        self::assertTrue($provider->supports(new Request(), $paymentRequest));
 
-        $response = $provider->getResponse($this->requestConfiguration(), $paymentRequest);
+        $response = $provider->getResponse(new Request(), $paymentRequest);
 
         self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame(303, $response->getStatusCode());
@@ -51,7 +51,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
             responseData: ['payment_link' => self::PAYMENT_LINK, 'payment_methods' => []],
         );
 
-        $response = $provider->getResponse($this->requestConfiguration(), $paymentRequest);
+        $response = $provider->getResponse(new Request(), $paymentRequest);
 
         self::assertInstanceOf(RedirectResponse::class, $response);
         self::assertSame(self::PAYMENT_LINK, $response->getTargetUrl());
@@ -92,7 +92,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
             billingCountry: 'LT',
         );
 
-        $response = $provider->getResponse($this->requestConfiguration(), $paymentRequest);
+        $response = $provider->getResponse(new Request(), $paymentRequest);
 
         self::assertSame('<grid>', $response->getContent());
     }
@@ -102,7 +102,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
         $paymentRequest = $this->paymentRequest();
         $paymentRequest->setAction(PaymentRequestInterface::ACTION_STATUS);
 
-        self::assertFalse($this->provider()->supports($this->requestConfiguration(), $paymentRequest));
+        self::assertFalse($this->provider()->supports(new Request(), $paymentRequest));
     }
 
     public function testDoesNotSupportRequestsThatAreNotProcessing(): void
@@ -110,31 +110,26 @@ final class EveryPayHttpResponseProviderTest extends TestCase
         $paymentRequest = $this->paymentRequest();
         $paymentRequest->setState(PaymentRequestInterface::STATE_NEW);
 
-        self::assertFalse($this->provider()->supports($this->requestConfiguration(), $paymentRequest));
+        self::assertFalse($this->provider()->supports(new Request(), $paymentRequest));
     }
 
     public function testDoesNotSupportPaymentsAlreadyInAFinalState(): void
     {
         $paymentRequest = $this->paymentRequest(paymentState: PaymentInterface::STATE_COMPLETED);
 
-        self::assertFalse($this->provider()->supports($this->requestConfiguration(), $paymentRequest));
+        self::assertFalse($this->provider()->supports(new Request(), $paymentRequest));
     }
 
     public function testDoesNotSupportRequestsWithoutAPaymentLink(): void
     {
         $paymentRequest = $this->paymentRequest(responseData: []);
 
-        self::assertFalse($this->provider()->supports($this->requestConfiguration(), $paymentRequest));
+        self::assertFalse($this->provider()->supports(new Request(), $paymentRequest));
     }
 
     private function provider(): EveryPayHttpResponseProvider
     {
         return new EveryPayHttpResponseProvider($this->createStub(Environment::class), new MethodGridViewFactory());
-    }
-
-    private function requestConfiguration(): RequestConfiguration
-    {
-        return $this->createStub(RequestConfiguration::class);
     }
 
     /**

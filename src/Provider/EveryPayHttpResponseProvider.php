@@ -12,6 +12,7 @@ use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Payment\Model\PaymentRequestInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
 
@@ -22,6 +23,10 @@ use Twig\Environment;
  * inside the shop first. When it does not support the request (capture
  * failed, or the payment already reached a final state), Sylius falls back
  * to /after-pay/{hash} -> status check -> thank-you/retry.
+ *
+ * The request argument is typed Request|RequestConfiguration because Sylius
+ * 2.3 swapped RequestConfiguration for Request in the interface; the widened
+ * parameter satisfies both lines. Neither method reads it.
  */
 #[AutoconfigureTag('sylius.payment_request.provider.http_response', ['gateway_factory' => EveryPayGateway::FACTORY_NAME])]
 final readonly class EveryPayHttpResponseProvider implements HttpResponseProviderInterface
@@ -38,7 +43,7 @@ final readonly class EveryPayHttpResponseProvider implements HttpResponseProvide
     }
 
     public function supports(
-        RequestConfiguration $requestConfiguration,
+        Request|RequestConfiguration $request,
         PaymentRequestInterface $paymentRequest,
     ): bool {
         if (PaymentRequestInterface::ACTION_CAPTURE !== $paymentRequest->getAction()) {
@@ -61,7 +66,7 @@ final readonly class EveryPayHttpResponseProvider implements HttpResponseProvide
     }
 
     public function getResponse(
-        RequestConfiguration $requestConfiguration,
+        Request|RequestConfiguration $request,
         PaymentRequestInterface $paymentRequest,
     ): Response {
         $responseData = $paymentRequest->getResponseData();

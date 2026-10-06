@@ -9,3 +9,11 @@ parameters:
         # Test application kernel config - contains dependency-version-dependent
         # runtime switches phpstan would judge against the installed set only.
         - tests/TestApplication
+
+    ignoreErrors:
+        -
+            # Symfony Workflow events are generic only since 8.1; on the
+            # 6.4/7.4 lines the CompletedEvent<object> annotation is "not generic".
+            identifier: generics.notGeneric
+            path: src/EventListener/RefundEveryPayPaymentListener.php
+            reportUnmatched: false

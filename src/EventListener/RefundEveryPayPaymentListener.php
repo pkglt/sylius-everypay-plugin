@@ -51,6 +51,9 @@ final readonly class RefundEveryPayPaymentListener
     ) {
     }
 
+    /**
+     * @param CompletedEvent<object> $event
+     */
     public function __invoke(CompletedEvent $event): void
     {
         $payment = $event->getSubject();

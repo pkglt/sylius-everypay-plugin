@@ -178,7 +178,7 @@ final class ShopFixtures
         $order->setNumber('000000001');
         $order->setTokenValue('everypaytesttoken');
         $order->setState(OrderInterface::STATE_NEW);
-        $order->setCheckoutCompletedAt(new \DateTimeImmutable());
+        $order->setCheckoutCompletedAt(new \DateTime());
 
         /** @var AddressInterface $billingAddress */
         $billingAddress = $this->addressFactory->createNew();
