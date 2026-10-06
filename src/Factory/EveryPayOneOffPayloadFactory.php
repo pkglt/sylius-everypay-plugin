@@ -89,10 +89,12 @@ final readonly class EveryPayOneOffPayloadFactory
             $payload['preferred_country'] = $billingCountry;
         }
 
+        // EveryPay asks for no shipping fields when nothing ships (digital
+        // goods, services) - Sylius still keeps a shipping address there.
         return array_merge(
             $payload,
             $this->addressFields('billing', $billingAddress),
-            $this->addressFields('shipping', $order->getShippingAddress()),
+            $order->isShippingRequired() ? $this->addressFields('shipping', $order->getShippingAddress()) : [],
         );
     }
 

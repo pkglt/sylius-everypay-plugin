@@ -237,6 +237,28 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame(str_repeat('a', 50), $payload['shipping_line1']);
     }
 
+    public function testShippingFieldsAreLeftOutWhenNothingShips(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000013',
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: $this->address('Kaunas', 'LT', 'Savanorių pr. 1', '44255'),
+                shippingAddress: $this->address('Kaunas', 'LT', 'Savanorių pr. 1', '44255'),
+                shippingRequired: false,
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame('Savanorių pr. 1', $payload['billing_line1']);
+        self::assertSame([], array_filter(array_keys($payload), static fn (string $key): bool => str_starts_with($key, 'shipping_')));
+    }
+
     private function requestStackWithClientIp(?string $ip): RequestStack
     {
         $requestStack = new RequestStack();
@@ -256,6 +278,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         ?AddressInterface $billingAddress,
         ?AddressInterface $shippingAddress,
         ?string $channelName = null,
+        bool $shippingRequired = true,
     ): PaymentInterface {
         $channel = null;
         if (null !== $channelName) {
@@ -275,6 +298,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         $order->method('getCustomer')->willReturn($customer);
         $order->method('getBillingAddress')->willReturn($billingAddress);
         $order->method('getShippingAddress')->willReturn($shippingAddress);
+        $order->method('isShippingRequired')->willReturn($shippingRequired);
         $order->method('getChannel')->willReturn($channel);
 
         $payment = $this->createStub(PaymentInterface::class);
