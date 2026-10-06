@@ -123,6 +123,9 @@
                     environment: setup.environment
                 };
                 if (setup.preferred_country) { options.preferredCountry = setup.preferred_country; }
+                if (setup.phone_number) {
+                    options.phoneNumber = { countryCode: setup.phone_number.country_code, phoneNumber: setup.phone_number.number };
+                }
                 if (setup.email) { options.email = setup.email; }
 
                 element = new EveryPay({ account: setup.account_name, username: setup.api_username })

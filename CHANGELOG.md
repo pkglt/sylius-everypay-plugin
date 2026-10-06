@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Payment Elements integration guide; the mode stays experimental until it
   has run in production. In this mode the API username and processing
   account are sent to the browser, as the SDK requires - the API secret
-  never is.
+  never is. The customer's email and phone number are passed to the SDK so
+  Click to Pay can recognise a returning card.
 
 ### Changed
 

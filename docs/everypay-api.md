@@ -209,7 +209,9 @@ integration guide attached to the help-centre article
   phoneNumber?: {countryCode, phoneNumber}, allowedPaymentMethods?,
   tokenization?})` -> `.build({element: 'payment'})` ->
   `await element.mount('#selector')`. Omit an unknown optional field
-  entirely rather than passing an empty value. The element is an iframe of
+  entirely rather than passing an empty value. `email` and `phoneNumber`
+  let Click to Pay recognise a returning card; the plugin passes the same
+  email and split phone it sent in the oneoff. The element is an iframe of
   `{base host}/el/v3`.
 - `element.submit()` validates inside the iframe. It **rejects** for most
   invalid input (card number, name, CVC, expiry) but **resolves with

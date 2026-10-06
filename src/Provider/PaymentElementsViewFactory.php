@@ -66,6 +66,7 @@ final readonly class PaymentElementsViewFactory
         $locale = $elements['locale'] ?? null;
         $email = $elements['email'] ?? null;
         $preferredCountry = $elements['preferred_country'] ?? null;
+        $phoneNumber = $elements['phone_number'] ?? null;
 
         return [
             'payment' => $payment,
@@ -82,6 +83,7 @@ final readonly class PaymentElementsViewFactory
                     'locale' => is_string($locale) && '' !== $locale ? $locale : 'en',
                     'email' => is_string($email) && '' !== $email ? $email : null,
                     'preferred_country' => is_string($preferredCountry) && '' !== $preferredCountry ? $preferredCountry : null,
+                    'phone_number' => $this->phoneNumberFrom($phoneNumber),
                 ],
                 'payment_intent' => [
                     'accountName' => $credentials->accountName,
@@ -94,5 +96,24 @@ final readonly class PaymentElementsViewFactory
                 ],
             ],
         ];
+    }
+
+    /**
+     * The SDK wants the phone omitted rather than half-filled.
+     *
+     * @return array{country_code: string, number: string}|null
+     */
+    private function phoneNumberFrom(mixed $phoneNumber): ?array
+    {
+        if (!is_array($phoneNumber)) {
+            return null;
+        }
+
+        $countryCode = $phoneNumber['country_code'] ?? null;
+        $number = $phoneNumber['number'] ?? null;
+
+        return is_string($countryCode) && '' !== $countryCode && is_string($number) && '' !== $number
+            ? ['country_code' => $countryCode, 'number' => $number]
+            : null;
     }
 }

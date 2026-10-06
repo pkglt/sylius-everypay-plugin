@@ -27,6 +27,7 @@ final class PaymentElementsViewFactoryTest extends TestCase
             'locale' => 'lt',
             'email' => 'customer@example.com',
             'preferred_country' => 'LT',
+            'phone_number' => ['country_code' => '370', 'number' => '61234567'],
         ],
     ];
 
@@ -46,6 +47,7 @@ final class PaymentElementsViewFactoryTest extends TestCase
                 'locale' => 'lt',
                 'email' => 'customer@example.com',
                 'preferred_country' => 'LT',
+                'phone_number' => ['country_code' => '370', 'number' => '61234567'],
             ],
             'payment_intent' => [
                 'accountName' => 'EUR3D1',
@@ -82,6 +84,7 @@ final class PaymentElementsViewFactoryTest extends TestCase
             $responseData['payment_elements']['locale'],
             $responseData['payment_elements']['email'],
             $responseData['payment_elements']['preferred_country'],
+            $responseData['payment_elements']['phone_number'],
         );
 
         $view = (new PaymentElementsViewFactory())->viewFrom($this->paymentRequest($responseData));
@@ -95,6 +98,22 @@ final class PaymentElementsViewFactoryTest extends TestCase
         self::assertSame('en', $setup['locale']);
         self::assertNull($setup['email']);
         self::assertNull($setup['preferred_country']);
+        self::assertNull($setup['phone_number']);
+    }
+
+    public function testAHalfFilledPhoneNumberIsLeftOut(): void
+    {
+        $responseData = self::RESPONSE_DATA;
+        $responseData['payment_elements']['phone_number'] = ['country_code' => '370', 'number' => ''];
+
+        $view = (new PaymentElementsViewFactory())->viewFrom($this->paymentRequest($responseData));
+
+        self::assertNotNull($view);
+        $elements = $view['elements'];
+        self::assertIsArray($elements);
+        $setup = $elements['setup'];
+        self::assertIsArray($setup);
+        self::assertNull($setup['phone_number']);
     }
 
     public function testReturnsNullWithoutTheElementsBlob(): void
