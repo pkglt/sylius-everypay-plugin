@@ -89,6 +89,18 @@ final readonly class EveryPayOneOffPayloadFactory
             $payload['preferred_country'] = $billingCountry;
         }
 
+        // 3DS input the card schemes are about to require. The checkout's
+        // billing phone wins over the customer profile's; a national number
+        // is read with the billing country's dialling rules.
+        $phoneNumber = $billingAddress?->getPhoneNumber();
+        if (null === $phoneNumber || '' === trim($phoneNumber)) {
+            $phoneNumber = $order->getCustomer()?->getPhoneNumber();
+        }
+        $phoneNumber = EveryPayPhoneNumber::fromSylius($phoneNumber, $billingCountry);
+        if (null !== $phoneNumber) {
+            $payload['phone_number'] = $phoneNumber->toPayload();
+        }
+
         // EveryPay asks for no shipping fields when nothing ships (digital
         // goods, services) - Sylius still keeps a shipping address there.
         return array_merge(

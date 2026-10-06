@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The customer's phone number is sent with the payment request as
+  `phone_number` (dialling code and national number, as EveryPay takes it),
+  feeding 3DS authentication in every display mode - the card schemes are
+  about to require it. The billing address phone is used, else the customer
+  profile's. Sylius stores phone numbers as free text, so they are split
+  conservatively: international notation for the listed European countries,
+  national notation by the billing country's dialling rules, and anything
+  else is left out rather than guessed.
+
 ### Changed
 
 - Address fields follow EveryPay's revised card address rules (merchant

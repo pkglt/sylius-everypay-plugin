@@ -45,7 +45,9 @@ status query string.
    Useful optional: `locale` (`lt`, `en`, `lv`, `et`, `ru`, ...), `email` and
    `phone_number {country_code, number}` (both flagged by the spec as "soon
    mandatory for all card payment requests" - upcoming Visa/Mastercard
-   requirements), `customer_ip`, `preferred_country` (`EE`/`LV`/`LT` -
+   requirements; `country_code` is the dialling code, 1-4 digits, `number`
+   4-14 digits - the plugin sends the billing phone, else the customer's,
+   only when `EveryPayPhoneNumber` can split it safely), `customer_ip`, `preferred_country` (`EE`/`LV`/`LT` -
    pre-selects the Open Banking country tab), `billing_*`/`shipping_*` address
    fields (improve card fraud scoring; omitting them for card payments "may
    result in higher decline rates, degraded fraud screening, or limited
