@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Pkg\SyliusEveryPayPlugin\EveryPayGateway;
 use Pkg\SyliusEveryPayPlugin\Provider\EveryPayHttpResponseProvider;
 use Pkg\SyliusEveryPayPlugin\Provider\MethodGridViewFactory;
+use Pkg\SyliusEveryPayPlugin\Provider\PaymentElementsViewFactory;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
@@ -42,7 +43,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
     {
         $twig = $this->createMock(Environment::class);
         $twig->expects(self::never())->method('render');
-        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory());
+        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory(), new PaymentElementsViewFactory());
 
         // Grid configured, but EveryPay returned no per-method links: the
         // hosted page redirect must stay as the fallback.
@@ -78,7 +79,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
                 }),
             )
             ->willReturn('<grid>');
-        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory());
+        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory(), new PaymentElementsViewFactory());
 
         $paymentRequest = $this->paymentRequest(
             displayMode: EveryPayGateway::DISPLAY_MODE_METHOD_GRID,
@@ -95,6 +96,69 @@ final class EveryPayHttpResponseProviderTest extends TestCase
         $response = $provider->getResponse(new Request(), $paymentRequest);
 
         self::assertSame('<grid>', $response->getContent());
+    }
+
+    public function testRendersTheEmbeddedCheckoutWhenConfigured(): void
+    {
+        $twig = $this->createMock(Environment::class);
+        $twig
+            ->expects(self::once())
+            ->method('render')
+            ->with(
+                '@PkgSyliusEveryPayPlugin/shop/payment_elements.html.twig',
+                self::callback(static function (array $context): bool {
+                    self::assertSame(self::PAYMENT_LINK, $context['payment_link']);
+                    self::assertSame(EveryPayGateway::ELEMENTS_SDK_URLS[EveryPayGateway::ENVIRONMENT_DEMO], $context['sdk_url']);
+
+                    $elements = $context['elements'];
+                    self::assertIsArray($elements);
+                    $paymentIntent = $elements['payment_intent'];
+                    self::assertIsArray($paymentIntent);
+                    self::assertSame('mobile-access-token-123', $paymentIntent['bearerToken'] ?? null);
+
+                    return true;
+                }),
+            )
+            ->willReturn('<elements>');
+        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory(), new PaymentElementsViewFactory());
+
+        $paymentRequest = $this->paymentRequest(
+            displayMode: EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS,
+            responseData: [
+                'payment_link' => self::PAYMENT_LINK,
+                'payment_reference' => 'ref-123',
+                'payment_elements' => [
+                    'mobile_access_token' => 'mobile-access-token-123',
+                    'customer_url' => 'https://shop.example/after-pay/hash',
+                    'order_reference' => '000123-7',
+                    'amount' => 25.99,
+                    'locale' => 'lt',
+                ],
+            ],
+        );
+
+        $response = $provider->getResponse(new Request(), $paymentRequest);
+
+        self::assertSame('<elements>', $response->getContent());
+    }
+
+    public function testFallsBackToRedirectWhenTheElementsDataIsMissing(): void
+    {
+        $twig = $this->createMock(Environment::class);
+        $twig->expects(self::never())->method('render');
+        $provider = new EveryPayHttpResponseProvider($twig, new MethodGridViewFactory(), new PaymentElementsViewFactory());
+
+        // Embedded checkout configured, but EveryPay returned no
+        // mobile_access_token: the hosted page redirect must stay.
+        $paymentRequest = $this->paymentRequest(
+            displayMode: EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS,
+            responseData: ['payment_link' => self::PAYMENT_LINK, 'payment_reference' => 'ref-123'],
+        );
+
+        $response = $provider->getResponse(new Request(), $paymentRequest);
+
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertSame(self::PAYMENT_LINK, $response->getTargetUrl());
     }
 
     public function testDoesNotSupportOtherActionsThanCapture(): void
@@ -129,7 +193,7 @@ final class EveryPayHttpResponseProviderTest extends TestCase
 
     private function provider(): EveryPayHttpResponseProvider
     {
-        return new EveryPayHttpResponseProvider($this->createStub(Environment::class), new MethodGridViewFactory());
+        return new EveryPayHttpResponseProvider($this->createStub(Environment::class), new MethodGridViewFactory(), new PaymentElementsViewFactory());
     }
 
     /**
@@ -143,6 +207,8 @@ final class EveryPayHttpResponseProviderTest extends TestCase
     ): PaymentRequest {
         $gatewayConfig = $this->createStub(GatewayConfigInterface::class);
         $gatewayConfig->method('getConfig')->willReturn([
+            EveryPayGateway::CONFIG_API_USERNAME => 'a04e7ce1060e7024',
+            EveryPayGateway::CONFIG_ACCOUNT_NAME => 'EUR3D1',
             EveryPayGateway::CONFIG_DISPLAY_MODE => $displayMode,
         ]);
 

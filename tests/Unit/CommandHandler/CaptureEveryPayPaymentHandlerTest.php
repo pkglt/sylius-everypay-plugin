@@ -17,6 +17,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\PaymentBundle\Provider\PaymentRequestProviderInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\Payment;
 use Sylius\Component\Payment\Model\GatewayConfigInterface;
@@ -157,12 +158,87 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
         self::assertSame([], $logger->messages('warning'));
     }
 
-    private function paymentRequest(?string $paymentCurrency = null): PaymentRequest
+    public function testElementsModeRequestsAMobilePaymentAndStoresTheElementsData(): void
     {
+        $paymentRequest = $this->paymentRequest(displayMode: EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS, customerPhone: '+370 612 34567');
+        $apiResponse = new MockResponse(json_encode([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+            'payment_state' => 'initial',
+            'mobile_access_token' => 'mobile-access-token-123',
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]);
+        $handler = $this->handler($paymentRequest, $apiResponse);
+
+        $handler(new CaptureEveryPayPayment('hash'));
+
+        $sentBody = json_decode((string) $apiResponse->getRequestOptions()['body'], true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($sentBody);
+        self::assertTrue($sentBody['mobile_payment'] ?? null);
+
+        $elements = $paymentRequest->getResponseData()['payment_elements'] ?? null;
+        self::assertIsArray($elements);
+        self::assertSame('mobile-access-token-123', $elements['mobile_access_token']);
+        self::assertSame('https://shop.example/after-pay/hash', $elements['customer_url']);
+        self::assertSame($sentBody['order_reference'], $elements['order_reference']);
+        self::assertSame(25.99, $elements['amount']);
+        self::assertSame('lt', $elements['locale']);
+        // The same split phone feeds 3DS and the SDK's Click to Pay lookup.
+        self::assertSame(['country_code' => '370', 'number' => '61234567'], $sentBody['phone_number'] ?? null);
+        self::assertSame($sentBody['phone_number'], $elements['phone_number']);
+    }
+
+    public function testElementsModeWithoutATokenStillStoresTheHostedPageLink(): void
+    {
+        $logger = new RecordingLogger();
+        $paymentRequest = $this->paymentRequest(paymentCurrency: 'EUR', displayMode: EveryPayGateway::DISPLAY_MODE_PAYMENT_ELEMENTS);
+        $handler = $this->handler($paymentRequest, new MockResponse(json_encode([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+            'payment_state' => 'initial',
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]), $logger);
+
+        $handler(new CaptureEveryPayPayment('hash'));
+
+        // No token, no embedded checkout - but the attempt stays alive and
+        // the response provider falls back to the hosted page redirect.
+        $responseData = $paymentRequest->getResponseData();
+        self::assertArrayNotHasKey('payment_elements', $responseData);
+        self::assertSame(self::PAYMENT_LINK, $responseData['payment_link']);
+
+        $warnings = $logger->messages('warning');
+        self::assertCount(1, $warnings);
+        self::assertStringContainsString('mobile_access_token', $warnings[0]);
+    }
+
+    public function testRedirectModeDoesNotRequestAMobilePayment(): void
+    {
+        $paymentRequest = $this->paymentRequest();
+        $apiResponse = new MockResponse(json_encode([
+            'payment_reference' => self::PAYMENT_REFERENCE,
+            'payment_link' => self::PAYMENT_LINK,
+        ], \JSON_THROW_ON_ERROR), ['http_code' => 201]);
+        $handler = $this->handler($paymentRequest, $apiResponse);
+
+        $handler(new CaptureEveryPayPayment('hash'));
+
+        $sentBody = json_decode((string) $apiResponse->getRequestOptions()['body'], true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($sentBody);
+        self::assertArrayNotHasKey('mobile_payment', $sentBody);
+        self::assertArrayNotHasKey('payment_elements', $paymentRequest->getResponseData());
+    }
+
+    private function paymentRequest(?string $paymentCurrency = null, ?string $displayMode = null, ?string $customerPhone = null): PaymentRequest
+    {
+        $customer = null;
+        if (null !== $customerPhone) {
+            $customer = $this->createStub(CustomerInterface::class);
+            $customer->method('getPhoneNumber')->willReturn($customerPhone);
+        }
+
         $order = $this->createStub(OrderInterface::class);
         $order->method('getNumber')->willReturn('000123');
         $order->method('getLocaleCode')->willReturn('lt_LT');
-        $order->method('getCustomer')->willReturn(null);
+        $order->method('getCustomer')->willReturn($customer);
         $order->method('getCustomerIp')->willReturn('203.0.113.7');
         $order->method('getBillingAddress')->willReturn(null);
         $order->method('getShippingAddress')->willReturn(null);
@@ -174,12 +250,16 @@ final class CaptureEveryPayPaymentHandlerTest extends TestCase
             $payment->setCurrencyCode($paymentCurrency);
         }
 
-        $gatewayConfig = $this->createStub(GatewayConfigInterface::class);
-        $gatewayConfig->method('getConfig')->willReturn([
+        $config = [
             EveryPayGateway::CONFIG_API_USERNAME => 'a04e7ce1060e7024',
             EveryPayGateway::CONFIG_API_SECRET => 'secret',
             EveryPayGateway::CONFIG_ACCOUNT_NAME => 'EUR3D1',
-        ]);
+        ];
+        if (null !== $displayMode) {
+            $config[EveryPayGateway::CONFIG_DISPLAY_MODE] = $displayMode;
+        }
+        $gatewayConfig = $this->createStub(GatewayConfigInterface::class);
+        $gatewayConfig->method('getConfig')->willReturn($config);
 
         $method = $this->createStub(PaymentMethodInterface::class);
         $method->method('getGatewayConfig')->willReturn($gatewayConfig);
