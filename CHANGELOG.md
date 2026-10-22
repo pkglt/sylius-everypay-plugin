@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   need no shipping (digital goods, services), as EveryPay asks. Country stays
   ISO alpha-2, which remains valid. The 0.6.0 entry's "from 2026-10-01" date
   was superseded by the revised timeline.
+- The README recommends Sylius 2.2.12 / 2.3.2 or newer. Those releases fix
+  a pay-page error on a customer's third payment attempt for the same order
+  (Sylius PR 19302), which this plugin's keep-the-payment-`new` retry design
+  runs into on older releases. Nothing changes in the plugin itself.
 
 ## [0.7.0] - 2026-10-07
 

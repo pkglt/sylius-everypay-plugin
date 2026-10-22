@@ -57,7 +57,13 @@ country first):
 | | Version |
 |---|---|
 | PHP | 8.2+ (8.3+ for Sylius 2.3) |
-| Sylius | 2.2+ (tested on 2.2 and 2.3) |
+| Sylius | 2.2+ (tested on 2.2 and 2.3); 2.2.12 / 2.3.2 or newer recommended |
+
+Sylius 2.2.12 and 2.3.2 fix a pay-page error on a customer's third payment
+attempt for the same order ([Sylius PR 19302](https://github.com/Sylius/Sylius/pull/19302)).
+This plugin keeps the payment `new` so a customer who left the hosted page
+can retry, which is exactly the case that triggered it; on older releases the
+third attempt ends in a server error.
 
 Works with the standard Sylius shop frontend out of the box, and with
 headless/API-only stores (see [Headless checkouts](#headless--api-checkouts)).
