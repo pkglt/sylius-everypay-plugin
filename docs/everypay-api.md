@@ -6,7 +6,9 @@ everypay.gr (a Greek company).
 
 ## Sources
 
-- API reference (ReDoc): https://support.every-pay.com/apidoc/main/
+- API reference (ReDoc): https://support.every-pay.com/apidoc/main/ - the
+  OpenAPI file behind it is `openapi.yaml` in the same directory (last
+  republished 2026-10-15)
 - Help center: https://support.every-pay.com/en/ (collections: Custom
   Integration, Plugin Integration, SDKs)
 - Merchant portal (live): https://portal.every-pay.eu/ - API username/secret
@@ -77,9 +79,10 @@ status query string.
 ### Address field rules (production 2027-01-04)
 
 Visa/Mastercard 3DS scheme rules, announced in EveryPay's merchant notice of
-2026-09-21 (revised timeline; FAQ: help-centre article 16971870). From the
-dates below, a request with a non-conforming value is **rejected** as an API
-error - nothing is cut server-side.
+2026-09-21 (revised timeline; FAQ: help-centre article 16971870) and, since
+the API reference was republished on 2026-10-15, noted on the oneoff and CIT
+endpoints themselves. From the dates below, a request with a non-conforming
+value is **rejected** as an API error - nothing is cut server-side.
 
 | | Demo | Production |
 |---|---|---|
@@ -88,14 +91,15 @@ error - nothing is cut server-side.
 
 - `billing_country`/`shipping_country`: max 3 chars - ISO alpha-2 **stays
   valid**, ISO 3166-1 numeric (`233` for Estonia) is *additionally*
-  accepted. The spec's "Format: ISO alpha-2 (3)" means exactly that.
+  accepted. The spec now spells it out: "Format: ISO alpha-2 and ISO 3166-1
+  numeric. Character limit 3".
 - Address lines 1-3 are consolidated into one combined line, max 50 chars
   (characters, not bytes - diacritics count once). Join existing parts with
   ", "; if too long, keep the street name and house number and cut at a word
-  boundary, never mid-word. The notice calls the field `billing_line` /
-  `shipping_line`, but no published spec (EveryPay's or SEB's, both dated
-  2026-07-14) has that name yet - `billing_line1` is still the documented
-  field. Verify on demo from 2026-11-01.
+  boundary, never mid-word. The notice loosely calls the field
+  `billing_line` / `shipping_line`; the republished spec keeps the names
+  `billing_line1`..`billing_line3` (limits shown as "255 (50)"), so
+  `billing_line1` is the field to send.
 - `billing_city`/`shipping_city` max 50, `*_postcode` max 16,
   `billing_state` ISO 3166-2.
 - Address fields stay optional, but send at least the billing address for
