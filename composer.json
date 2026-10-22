@@ -42,7 +42,7 @@
         "symfony/string": "^6.4 || ^7.0 || ^8.0"
     },
     "require-dev": {
-        "api-platform/json-schema": "^4.2",
+        "api-platform/json-schema": "^5.0",
         "behat/behat": "^3.14",
         "doctrine/orm": "!=3.6.8",
         "friends-of-behat/symfony-extension": "^2.6",
