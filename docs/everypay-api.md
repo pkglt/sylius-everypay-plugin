@@ -6,7 +6,9 @@ everypay.gr (a Greek company).
 
 ## Sources
 
-- API reference (ReDoc): https://support.every-pay.com/apidoc/main/
+- API reference (ReDoc): https://support.every-pay.com/apidoc/main/ - the
+  OpenAPI file behind it is `openapi.yaml` in the same directory (last
+  republished 2026-10-15)
 - Help center: https://support.every-pay.com/en/ (collections: Custom
   Integration, Plugin Integration, SDKs)
 - Merchant portal (live): https://portal.every-pay.eu/ - API username/secret
@@ -45,13 +47,15 @@ status query string.
    Useful optional: `locale` (`lt`, `en`, `lv`, `et`, `ru`, ...), `email` and
    `phone_number {country_code, number}` (both flagged by the spec as "soon
    mandatory for all card payment requests" - upcoming Visa/Mastercard
-   requirements), `customer_ip`, `preferred_country` (`EE`/`LV`/`LT` -
+   requirements; `country_code` is the dialling code, 1-4 digits, `number`
+   4-14 digits - the plugin sends the billing phone, else the customer's,
+   only when `EveryPayPhoneNumber` can split it safely), `customer_ip`, `preferred_country` (`EE`/`LV`/`LT` -
    pre-selects the Open Banking country tab), `billing_*`/`shipping_*` address
    fields (improve card fraud scoring; omitting them for card payments "may
    result in higher decline rates, degraded fraud screening, or limited
-   dispute resolution"; from 2026-10-01 the character limits shrink -
-   city/line1 50, postcode 16, country strict ISO alpha-2, `billing_state`
-   ISO 3166-2), `payment_description` (Open Banking statement text, ~65
+   dispute resolution"; stricter limits from 2027-01-04 - see
+   [Address field rules](#address-field-rules-production-2027-01-04)),
+   `payment_description` (Open Banking statement text, ~65
    chars, charset `[a-zA-Z0-9/-?:().,'+]` - `order_reference` shares the same
    charset and caps at 255 chars for cards / 120 for Open Banking),
    `structured_reference` (Open Banking structured payment reference,
@@ -71,6 +75,41 @@ status query string.
 6. `GET /v4/payments/{payment_reference}?api_username=...` -> authoritative
    `payment_state`. Optional `detailed=true` adds
    `detailed_fraud_check_results` (the portal's "Fraud Check Results" panel).
+
+### Address field rules (production 2027-01-04)
+
+Visa/Mastercard 3DS scheme rules, announced in EveryPay's merchant notice of
+2026-09-21 (revised timeline; FAQ: help-centre article 16971870) and, since
+the API reference was republished on 2026-10-15, noted on the oneoff and CIT
+endpoints themselves. From the dates below, a request with a non-conforming
+value is **rejected** as an API error - nothing is cut server-side.
+
+| | Demo | Production |
+|---|---|---|
+| Country format | 2026-10-01 | 2027-01-04 |
+| Address lines + length limits | 2026-11-01 | 2027-01-04 |
+
+- `billing_country`/`shipping_country`: max 3 chars - ISO alpha-2 **stays
+  valid**, ISO 3166-1 numeric (`233` for Estonia) is *additionally*
+  accepted. The spec now spells it out: "Format: ISO alpha-2 and ISO 3166-1
+  numeric. Character limit 3".
+- Address lines 1-3 are consolidated into one combined line, max 50 chars
+  (characters, not bytes - diacritics count once). Join existing parts with
+  ", "; if too long, keep the street name and house number and cut at a word
+  boundary, never mid-word. The notice loosely calls the field
+  `billing_line` / `shipping_line`; the republished spec keeps the names
+  `billing_line1`..`billing_line3` (limits shown as "255 (50)"), so
+  `billing_line1` is the field to send.
+- `billing_city`/`shipping_city` max 50, `*_postcode` max 16,
+  `billing_state` ISO 3166-2.
+- Address fields stay optional, but send at least the billing address for
+  card payments. Omit the shipping fields entirely when nothing ships
+  (digital goods, services) - no placeholder data.
+
+The plugin sends Sylius' single street field as `*_line1`, shortens city and
+street at a word boundary, drops a postcode/state/country that does not fit
+rather than cutting a code, and sends no shipping fields when the order does
+not require shipping.
 
 ## Callback notifications
 

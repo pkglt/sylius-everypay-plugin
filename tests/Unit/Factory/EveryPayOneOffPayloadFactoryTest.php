@@ -178,7 +178,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         self::assertSame(str_repeat('9', 100) . '-12345', $payload['order_reference']);
     }
 
-    public function testAddressFieldsAreTruncatedToTheUpcomingCharacterLimits(): void
+    public function testOverLongAddressFieldsAreFittedToTheCharacterLimits(): void
     {
         $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
 
@@ -189,19 +189,138 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
                 orderNumber: '000011',
                 localeCode: 'lt_LT',
                 email: null,
-                // Multibyte repeats prove the cut counts characters, not bytes.
+                // Multibyte repeats prove the limits count characters, not bytes.
                 billingAddress: $this->address(str_repeat('Ž', 60), 'LT', str_repeat('ą', 55), str_repeat('9', 20), 'LT-KU'),
                 shippingAddress: $this->address(str_repeat('Ū', 51), 'LT', 'Gedimino pr. 1', '01103'),
             ),
             self::CUSTOMER_URL,
         );
 
+        // A single over-long word has no boundary to cut at.
         self::assertSame(str_repeat('Ž', 50), $payload['billing_city']);
         self::assertSame(str_repeat('ą', 50), $payload['billing_line1']);
-        self::assertSame(str_repeat('9', 16), $payload['billing_postcode']);
+        // A cut postcode would be a wrong one - it is left out instead.
+        self::assertArrayNotHasKey('billing_postcode', $payload);
         self::assertSame('LT-KU', $payload['billing_state']);
         self::assertSame(str_repeat('Ū', 50), $payload['shipping_city']);
         self::assertSame('Gedimino pr. 1', $payload['shipping_line1']);
+        self::assertSame('01103', $payload['shipping_postcode']);
+    }
+
+    public function testOverLongAddressTextIsShortenedAtAWordBoundary(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000012',
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: $this->address(
+                    'Rietavo savivaldybės Daugėdų kaimo bendruomenės centras',
+                    'LT',
+                    "Laisvės alėja 101-12,\n Kauno miesto savivaldybė, Lietuvos Respublika",
+                    '44255',
+                ),
+                shippingAddress: $this->address('Kaunas', 'LT', str_repeat('a', 50) . ' tail', '44255'),
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        // Street and house number lead and survive; whitespace runs collapse
+        // and the dangling separator goes.
+        self::assertSame('Laisvės alėja 101-12, Kauno miesto savivaldybė', $payload['billing_line1']);
+        self::assertSame('Rietavo savivaldybės Daugėdų kaimo bendruomenės', $payload['billing_city']);
+        // A space right after the limit means the hard cut is already a word boundary.
+        self::assertSame(str_repeat('a', 50), $payload['shipping_line1']);
+    }
+
+    public function testShippingFieldsAreLeftOutWhenNothingShips(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000013',
+                localeCode: 'lt_LT',
+                email: null,
+                billingAddress: $this->address('Kaunas', 'LT', 'Savanorių pr. 1', '44255'),
+                shippingAddress: $this->address('Kaunas', 'LT', 'Savanorių pr. 1', '44255'),
+                shippingRequired: false,
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame('Savanorių pr. 1', $payload['billing_line1']);
+        self::assertSame([], array_filter(array_keys($payload), static fn (string $key): bool => str_starts_with($key, 'shipping_')));
+    }
+
+    public function testSendsTheBillingPhoneNumberSplitForEveryPay(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000014',
+                localeCode: 'lt_LT',
+                email: null,
+                // National notation, read with the billing country's rules.
+                billingAddress: $this->address('Kaunas', 'LT', 'Savanorių pr. 1', '44255', phoneNumber: '8 612 34567'),
+                shippingAddress: null,
+                customerPhone: '+371 2123 4567',
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        // The checkout's billing phone wins over the customer profile's.
+        self::assertSame(['country_code' => '370', 'number' => '61234567'], $payload['phone_number']);
+    }
+
+    public function testFallsBackToTheCustomerPhoneNumber(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000015',
+                localeCode: 'lv_LV',
+                email: null,
+                billingAddress: $this->address('Rīga', 'LV', 'Brīvības iela 1', 'LV-1010', phoneNumber: ' '),
+                shippingAddress: null,
+                customerPhone: '2123 4567',
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertSame(['country_code' => '371', 'number' => '21234567'], $payload['phone_number']);
+    }
+
+    public function testLeavesOutAPhoneNumberItCannotSplit(): void
+    {
+        $factory = new EveryPayOneOffPayloadFactory($this->requestStackWithClientIp(null));
+
+        $payload = $factory->create(
+            $this->payment(
+                amount: 1000,
+                paymentId: 1,
+                orderNumber: '000016',
+                localeCode: 'en_US',
+                email: null,
+                billingAddress: $this->address('New York', 'US', '5th Avenue 1', '10001', phoneNumber: '(212) 555-0100'),
+                shippingAddress: null,
+            ),
+            self::CUSTOMER_URL,
+        );
+
+        self::assertArrayNotHasKey('phone_number', $payload);
     }
 
     private function requestStackWithClientIp(?string $ip): RequestStack
@@ -223,6 +342,8 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         ?AddressInterface $billingAddress,
         ?AddressInterface $shippingAddress,
         ?string $channelName = null,
+        bool $shippingRequired = true,
+        ?string $customerPhone = null,
     ): PaymentInterface {
         $channel = null;
         if (null !== $channelName) {
@@ -231,9 +352,10 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         }
 
         $customer = null;
-        if (null !== $email) {
+        if (null !== $email || null !== $customerPhone) {
             $customer = $this->createStub(CustomerInterface::class);
             $customer->method('getEmail')->willReturn($email);
+            $customer->method('getPhoneNumber')->willReturn($customerPhone);
         }
 
         $order = $this->createStub(OrderInterface::class);
@@ -242,6 +364,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         $order->method('getCustomer')->willReturn($customer);
         $order->method('getBillingAddress')->willReturn($billingAddress);
         $order->method('getShippingAddress')->willReturn($shippingAddress);
+        $order->method('isShippingRequired')->willReturn($shippingRequired);
         $order->method('getChannel')->willReturn($channel);
 
         $payment = $this->createStub(PaymentInterface::class);
@@ -252,7 +375,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         return $payment;
     }
 
-    private function address(string $city, string $countryCode, string $street, string $postcode, ?string $provinceCode = null): AddressInterface
+    private function address(string $city, string $countryCode, string $street, string $postcode, ?string $provinceCode = null, ?string $phoneNumber = null): AddressInterface
     {
         $address = $this->createStub(AddressInterface::class);
         $address->method('getCity')->willReturn($city);
@@ -260,6 +383,7 @@ final class EveryPayOneOffPayloadFactoryTest extends TestCase
         $address->method('getStreet')->willReturn($street);
         $address->method('getPostcode')->willReturn($postcode);
         $address->method('getProvinceCode')->willReturn($provinceCode);
+        $address->method('getPhoneNumber')->willReturn($phoneNumber);
 
         return $address;
     }
